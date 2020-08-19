@@ -1,0 +1,23 @@
+# Maven #
+target/
+
+# IDEA #
+.idea/
+*.iml
+*.iws
+
+# Eclipse #
+.settings/
+.metadata/
+.classpath
+.project
+Servers/
+
+# Mac #
+.DS_Store
+
+# log #
+# log file but not log folder#
+log/*.log
+log/out/*.log.gz
+

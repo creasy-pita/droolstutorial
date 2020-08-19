@@ -1,0 +1,15 @@
+package com.creasypita.drools.rules;
+
+import com.creasypita.drools.model.Applicant;
+
+global com.creasypita.drools.model.SuggestedRole suggestedRole;
+
+dialect  "mvel"
+
+rule "Suggest supper Manager Role"
+    when
+        Applicant(experienceInYears > 10)
+        Applicant(currentSalary > 2500000 && currentSalary <= 10000000)
+    then
+        suggestedRole.setRole("supper Manager");
+end
