@@ -6,6 +6,8 @@ import org.junit.Test;
 import org.kie.api.definition.rule.Rule;
 import org.kie.api.runtime.KieContainer;
 import org.kie.internal.io.ResourceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
@@ -30,6 +32,7 @@ public class RulesListTest {
 
     @Test
     public void WhenDeployMoreRules_ThenOldIsRemainThere() throws Exception {
+
         DroolsEngineRuntime droolsEngineRuntime = new DroolsEngineRuntime();
         // 初始化drools
         KieContainer kieContainer = droolsEngineRuntime.getKieContainer();
@@ -42,6 +45,12 @@ public class RulesListTest {
         rules = kieContainer.getKieBase().getKiePackage("com.creasypita.drools.rules").getRules();
         runtimeRules = rules.stream().map(Rule::getName).collect(Collectors.toList());
         Assert.assertNotEquals(0,runtimeRules.size());
+    }
+
+    @Test
+    public void Testsss() {
+        Logger logger = LoggerFactory.getLogger(RulesListTest.class);
+
     }
 
 }

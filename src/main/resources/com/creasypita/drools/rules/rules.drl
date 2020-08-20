@@ -13,3 +13,4 @@ rule "Suggest supper Manager Role"
     then
         suggestedRole.setRole("supper Manager");
 end
+

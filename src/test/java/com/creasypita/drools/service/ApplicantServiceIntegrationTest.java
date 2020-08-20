@@ -24,12 +24,12 @@ public class ApplicantServiceIntegrationTest {
 
     @Test
     public void whenCriteriaMatching_ThenSuggestManagerRole() throws IOException {
-        Applicant applicant = new Applicant("Davis", 37, 1600000.0, 11);
+        Applicant applicant = new Applicant("Davis", 21, 1600000.0, 1);
         SuggestedRole suggestedRole = new SuggestedRole();
-
-
         applicantService.suggestARoleForApplicant(applicant, suggestedRole);
-        assertEquals("Manager", suggestedRole.getRole());
+//        assertEquals("Manager", suggestedRole.getRole());
+        assertEquals("assist Developer", suggestedRole.getRole());
     }
+
 
 }

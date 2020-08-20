@@ -29,3 +29,30 @@ rule "Suggest Developer Role"
     then
         suggestedRole.setRole("Developer");
 end
+
+rule "Suggest assist Developer Role"
+    when
+        Applicant(experienceInYears > 0 && experienceInYears <= 1)
+    then
+        suggestedRole.setRole("assist Developer");
+end
+
+rule "Other Role"
+    when
+        eval(checkIsTheRuleInvokeWhenNotFire(null))
+    then
+        suggestedRole.setRole("no Manager");
+end
+
+function Boolean FireSuggestManagerRole(){
+//    logger.info("invoking checkIsInvokeWhenNotFire");
+    System.out.println("invoking FireSuggestManagerRole");
+    return true;
+}
+
+function Boolean checkIsTheRuleInvokeWhenNotFire(String a){
+//    logger.info("invoking checkIsInvokeWhenNotFire");
+    System.out.println("invoking checkIsTheRuleInvokeWhenNotFire");
+    return true;
+//    return a.length()>10;
+}
