@@ -24,7 +24,7 @@ public class ApplicantService {
     public SuggestedRole suggestARoleForApplicant(Applicant applicant, SuggestedRole suggestedRole) throws IOException {
         kieSession.insert(applicant);
         kieSession.setGlobal("suggestedRole", suggestedRole);
-        kieSession.setGlobal("logger", logger);
+//        kieSession.setGlobal("logger", logger);
         //加入 自定义CPAgendaFilter
         List<String> accepteRulenameList = new ArrayList<>();
         accepteRulenameList.add("Suggest Manager Role");

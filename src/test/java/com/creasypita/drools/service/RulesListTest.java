@@ -47,10 +47,4 @@ public class RulesListTest {
         Assert.assertNotEquals(0,runtimeRules.size());
     }
 
-    @Test
-    public void Testsss() {
-        Logger logger = LoggerFactory.getLogger(RulesListTest.class);
-
-    }
-
 }

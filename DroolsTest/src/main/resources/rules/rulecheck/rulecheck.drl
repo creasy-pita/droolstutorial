@@ -1,0 +1,40 @@
+package rules.rulecheck
+import com.pojo.School;
+	rule "test001"
+//    agenda-group "ag1"
+		when
+			eval(true);
+		then
+	        System.out.println("test001: hello world");
+
+	end
+
+    rule "test002"
+//    agenda-group "ag2"
+        when
+//            eval(false)
+            eval(function1(null));
+        then
+            System.out.println("test002: hello world");
+    end
+//    rule "test003"
+////    agenda-group "ag2"
+//        when
+//            $s:School();
+//
+////              memberOf $s.classNameMap;
+//            eval(false)
+//            eval(function1(null));
+//        then
+//            $rn:drools.getRule().getName();
+//            System.out.println("test002: hello world");
+//    end
+
+function boolean function1(String aa){
+    System.out.println("----------------------------------------------------------------");
+//    System.out.println("rulename" + drools.getRule().getName());
+    System.out.println("function1 was invoked without fired");
+    System.out.println("----------------------------------------------------------------");
+//    aa.length();
+    return true;
+}

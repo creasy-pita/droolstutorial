@@ -20,4 +20,5 @@ Servers/
 # log file but not log folder#
 log/*.log
 log/out/*.log.gz
+*.log
 

@@ -1,5 +1,17 @@
 # drools tutorial
 
+
+
+
+
+## 2020年8月22日
+
+### :grey_question: 问题全量评估过程如何避免
+
+### 加入《Drools7.10权威指南》的测试用例
+
+github: https://github.com/projectLzh/DroolsTest
+
 ## 2020年8月20日
 
 加入自定义的规则过滤器CPAgendaFilter,可以只触发校验规则文件中Filter匹配的规则
