@@ -1,6 +1,6 @@
 package rules.isGlobal
 import com.pojo.Person;
-//global  java.lang.Boolean count;
+global  java.lang.Integer count;
 global  java.util.List  list;
 global  com.pojo.Person  person;
 
@@ -11,12 +11,18 @@ rule "global3的使用update1"
         list.add("aaa");
         list.add("aaa");
         list.add("aaa");
-        person.setName("张小三");
+        System.out.println("global3update1------------>count"+count);
+        count = 11;
+        System.out.println("global3update1------------>count"+count);
+        System.out.println("global3update1------------>person"+person.getName());
+        person.setName("店小二");
+        System.out.println("global3update1------------>person"+person.getName());
 end
 
 rule "global3的使用update2"
     when
     then
-        System.out.println("global3update1------------>list.size"+list.size());
-        System.out.println("global3update1------------>person"+person.getName());
+        System.out.println("global3update2------------>list.size"+list.size());
+        System.out.println("global3update2------------>person"+person.getName());
+        System.out.println("global3update2------------>count"+count);
 end

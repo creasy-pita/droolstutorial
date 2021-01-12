@@ -1,0 +1,17 @@
+package rules.isGlobal
+import com.pojo.Person;
+global  com.pojo.Person person;
+global  java.lang.Integer count;
+//在方法中更新global 变量
+rule "global4的update global in when function"
+    when
+        eval(setPersonName(person, "fun update global in when function"));
+    then
+        count=new Integer(50);
+        System.out.println("global4的update global in when function------------>person"+person.getName());
+end
+
+function java.lang.Boolean setPersonName(com.pojo.Person p, java.lang.String name){
+    p.setName(name);
+    return true;
+}

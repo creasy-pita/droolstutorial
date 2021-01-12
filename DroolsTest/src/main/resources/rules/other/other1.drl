@@ -1,0 +1,44 @@
+package rules.other
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+global com.alibaba.fastjson.JSONObject $obj
+//带组合实体的集合验证 + 简单实体的第一层属性的验证
+
+rule "大对象集合校验"
+    when
+        eval(collectionHandle($obj))
+    then
+
+end
+
+// combine.lista.age > 2 需要解读为遍历listb .age> 2
+//combine.lista.listb.age>2 需要解读为 遍历lista，再遍历listb .age> 2
+
+function java.lang.Boolean collectionHandle(com.alibaba.fastjson.JSONObject gObj){
+  if (gObj== null) {
+    return false;
+  }
+  String ruleName = "规则名称1";
+  //获取f.boys
+ com.alibaba.fastjson.JSONArray arr = gObj.getJSONObject("f").getJSONArray("boys");
+
+  //objkeys获取f.boys的部分
+
+  //判断f.boys.age>2
+  boolean re = true;
+  com.alibaba.fastjson.JSONArray valueOfObjKeyArr = new com.alibaba.fastjson.JSONArray();
+  for(Object obj : arr){
+    com.alibaba.fastjson.JSONObject boy = (com.alibaba.fastjson.JSONObject)obj;
+    //如果校验不成功，保存信息的复合主键信息 到$obj
+    if(!(boy.getIntValue("age")>2)){
+      re = false;
+      // @todo valuse of objkeys的组装
+    }
+  }
+  //**todo** 行不同，需要在 then clause中才能更新global variable
+  gObj.put(ruleName+"@@f.boys",valueOfObjKeyArr);
+  return re;
+}
+
+
+
