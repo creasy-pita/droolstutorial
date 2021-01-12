@@ -150,4 +150,8 @@
     <kbase name="rulecheck" packages="rules.rulecheck" >
         <ksession name="rulecheck"/>
     </kbase>
+    <kbase name="bigobj" packages="rules.bigobj">
+        <ksession name="bigobj"/>
+    </kbase>
+
 </kmodule>
