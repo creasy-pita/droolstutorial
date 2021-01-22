@@ -1,0 +1,8 @@
+package rules.bigobj
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+global com.alibaba.fastjson.JSONObject $obj
+//带组合实体的集合验证 + 简单实体的第一层属性的验证
+
+
+

@@ -1,5 +1,35 @@
 {
   "name":"1",
+  "boys": [
+    {
+      "name":"Tom",
+      "scoreReports": [
+        {
+          "subject": "math",
+          "score": 1
+        },
+        {
+          "subject": "English",
+          "score": 91
+        }
+      ]
+
+    },
+    {
+      "name":"Creasy",
+      "scoreReports": [
+        {
+          "subject": "math",
+          "score": 61
+        },
+        {
+          "subject": "English",
+          "score": 81
+        }
+      ]
+
+    }
+  ],
   "f": {
     "boys": [
       {

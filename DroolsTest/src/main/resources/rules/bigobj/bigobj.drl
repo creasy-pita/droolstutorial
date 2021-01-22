@@ -4,19 +4,33 @@ import com.alibaba.fastjson.JSONObject;
 global com.alibaba.fastjson.JSONObject $obj
 //带组合实体的集合验证 + 简单实体的第一层属性的验证
 
-rule "大对象集合校验"
-    when
-//        eval(collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0"))
-        eval( collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0") &&  $obj.getString("name") !="" )
-    then
+//rule "大对象集合校验"
+//    when
+////        eval(collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0"))
+//        eval( collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0") &&  $obj.getString("name") !="" )
+//    then
+//
+//end
+//
+//rule "大对象集合校验withexternalJavaFunction"
+//    when
+//        eval(new com.function.CollectFunction().isPositive(1) && validtePropertyCertNumber("1111"))
+////        eval(collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0"))
+//        eval( collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0") &&  $obj.getString("name") !="" )
+//    then
+//
+//end
+//
+//rule "大对象集合校验v2"
+//    when
+//        eval( new com.function.CollectFunction().collectionHandle($obj, "f.boys.age", "java.lang.Integer","<","18") )
+//    then
+//
+//end
 
-end
-
-rule "大对象集合校验withexternalJavaFunction"
+rule "大对象集合校验-双层或多层集合属性"
     when
-        eval(new com.Function.CollectFunction().isPositive(-1))
-//        eval(collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0"))
-        eval( collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0") &&  $obj.getString("name") !="" )
+        eval( new com.function.CollectFunction().arr($obj, "boys.scoreReports.score", "java.lang.Integer","<","50") )
     then
 
 end
@@ -76,5 +90,9 @@ function java.lang.Boolean collectionHandle(com.alibaba.fastjson.JSONObject gObj
   return re;
 }
 
-
+function java.lang.Boolean validtePropertyCertNumber(java.lang.String arg0) {
+        java.lang.String regex = "^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领]（\\d{4}）[\\u4E00-\\u9FA5]{0,15}不动产权第\\d{7}号$";
+        if (arg0.matches(regex))return true;
+        return false;
+}
 
