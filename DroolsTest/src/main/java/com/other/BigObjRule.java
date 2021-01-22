@@ -19,6 +19,11 @@ import java.util.ArrayList;
 public class BigObjRule {
     @Test
     public void testBigObjRule() throws URISyntaxException, IOException {
+
+
+        java.util.List<Object> a = new ArrayList<>();
+        java.util.List b = new ArrayList();
+
         KieServices kss = KieServices.Factory.get();
         KieContainer kc = kss.getKieClasspathContainer();
         KieSession ks =kc.newKieSession("bigobj");

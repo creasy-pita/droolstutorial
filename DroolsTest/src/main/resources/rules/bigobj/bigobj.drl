@@ -7,10 +7,20 @@ global com.alibaba.fastjson.JSONObject $obj
 rule "大对象集合校验"
     when
 //        eval(collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0"))
-        eval(collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0") &&  $obj.getString("name") !="" )
+        eval( collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0") &&  $obj.getString("name") !="" )
     then
 
 end
+
+rule "大对象集合校验withexternalJavaFunction"
+    when
+        eval(new com.Function.CollectFunction().isPositive(-1))
+//        eval(collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0"))
+        eval( collectionHandle($obj, "f.boys.age",">","0")  && collectionHandle($obj, "产权.boys.age",">","0") &&  $obj.getString("name") !="" )
+    then
+
+end
+
 
 // combine.lista.age > 2 需要解读为遍历listb .age> 2
 //combine.lista.listb.age>2 需要解读为 遍历lista，再遍历listb .age> 2
