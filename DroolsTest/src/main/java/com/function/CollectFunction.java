@@ -1,8 +1,11 @@
 package com.function;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonArrayFormatVisitor;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,11 +30,15 @@ public class CollectFunction {
         else{return false;}
     }
 
-    public java.lang.Boolean arr(com.alibaba.fastjson.JSONObject gObj,String namePath, String sjlx,String compareOperator,String rightOperand){
+    public java.lang.Boolean arr(com.alibaba.fastjson.JSONObject gObj,List<String> namePathList, List<String> sjlxList,String compareOperator,String rightOperand){
         //boys.scoreReports.score>99 boys.scoreReports.score<2
         boolean result = true;
         gObj.put("lamadasetvalue",true);
+        //第一层是  java.util.List 所以 使用getjsonarray
         JSONArray boys = gObj.getJSONArray("boys");
+        //第二层是  java.util.List 所以 使用getjsonarray
+
+
         List<JSONArray> scores = boys.stream().map(f -> ((JSONObject) f).getJSONArray("scoreReports")).collect(Collectors.toList());
 
         JSONArray scoreReports = boys.stream().map(f -> ((JSONObject) f).getJSONArray("scoreReports"))
@@ -58,6 +65,189 @@ public class CollectFunction {
                     return  re;
                 }).count();
         return gObj.getBoolean("lamadasetvalue");
+    }
+
+
+
+    public java.lang.Boolean arrv2(com.alibaba.fastjson.JSONObject gObj,String keysStr, String sjlxsStr,String compareOperatorStr,String rightOperandStr,String boolOpStr){
+        //boys.scoreReports.score>99 boys.scoreReports.score<2
+        boolean result = true;
+        String[] keyList = keysStr.split("\\.");
+        String[] sjlxList = sjlxsStr.split(",");
+        gObj.put("lamadasetvalue",true);
+        //list.object.attribute
+        //list.list.attribute
+        //object.list.attribute
+        //object.list.object.attribute
+        //object.list.object.list.attribute
+        //object.attribute   不属于本范围  因为没有midstxxzdbsm
+
+        //按key层次和各层次的数据类型解析获取最底层的实体
+        Object currentObj = gObj;
+        for (int keyIndex = 0; keyIndex < keyList.length; keyIndex++) {
+            String sjlx = sjlxList[keyIndex];
+            //java.lang.Object
+            if ("java.lang.Object".equals(sjlx)) {
+                String key = keyList[keyIndex];
+                if(currentObj instanceof JSONObject){
+                    //JSONObject中取JSONObject
+                    currentObj = ((JSONObject) currentObj).getJSONObject(key);
+                }else {
+                    //JSONArray 中取JSONObject   List<jsonobject>
+                    List<JSONObject> collect = ((JSONArray) currentObj).stream().map(f -> ((JSONObject) f).getJSONObject(key))
+                            .collect(Collectors.toList());
+                    JSONArray  newJArr = new JSONArray();
+                    newJArr.addAll(collect);
+                    currentObj = newJArr;
+                }
+            }
+            //java.util.List
+            else if("java.util.List".equals(sjlx))  {
+                String key = keyList[keyIndex];
+                if(currentObj instanceof JSONObject){
+                    //JSONObject中取JSONArray
+                    currentObj = ((JSONObject) currentObj).getJSONArray(key);
+                }else {
+                    //JSONArray中取JSONArray
+                    currentObj = ((JSONArray) currentObj).stream().map(f -> ((JSONObject) f).getJSONArray(key))
+                            .reduce((jsonArr1,jsonArr2) ->{
+                                jsonArr1.addAll(jsonArr2);
+                                return  jsonArr1;
+                            }).orElse(null);
+                }
+            }
+            else {
+                break;
+            }
+        }
+        if(currentObj == null)return false;
+        String keyName = keyList[keyList.length - 1];
+        String sjlx = sjlxList[sjlxList.length - 1];
+        String[] compareOperatorList = compareOperatorStr.split(",");
+        String[] rightOperandList = rightOperandStr.split(",");
+        String[] boolOpList = boolOpStr.split(",");
+
+        if (currentObj instanceof JSONObject) {
+
+        } else if (currentObj instanceof JSONArray) {
+            ((JSONArray) currentObj).parallelStream().filter( f -> {
+                        //todo 处理如下的复合表达式 ,先处理第一种不带先后顺序的
+                        //  boolexpression1 ||boolexpression2 || boolexpression3
+                        //  boolexpression1 || (boolexpression2 && boolexpression3)
+                        boolean re = true;
+                        for (int i = 0; i < compareOperatorList.length; i++) {
+                            String compareOperator = compareOperatorList[i];
+                            String rightOperand = rightOperandList[i];
+                            if(i == 0){
+                                re = re&&Compare(((JSONObject) f).getString(keyName), rightOperand, sjlx, compareOperator);
+                            }else
+                            {
+                                String boolOp = boolOpList[i - 1];
+                                if("and".equals(boolOp.toLowerCase())){
+                                    re = re&&Compare(((JSONObject) f).getString(keyName), rightOperand, sjlx, compareOperator);
+                                }else {
+                                    re = re||Compare(((JSONObject) f).getString(keyName), rightOperand, sjlx, compareOperator);
+                                }
+                            }
+                        }
+                        if(!re){
+                            gObj.put("lamadasetvalue",false);
+                            System.out.println(String.format("当前值%s不符合内容",((JSONObject) f).getString(keyName) ));
+                        }
+                        return  re;
+                    }
+            ).count();
+        }
+        return gObj.getBoolean("lamadasetvalue");
+    }
+
+
+    public boolean Compare(String leftValue,String rightValue, String sjlx, String compareOperator){
+        //todo 考虑所有操作符 "==",">","<",">=","<=","!=",不为空,为空,为真,为假,为空（含空串),不为空（含空串）,包含
+        //todo 考虑所有数据类型
+        /*
+        parseMap.put("java.lang.Boolean", "getBoolean");
+        parseMap.put("java.lang.Byte", "getByte");
+        parseMap.put("java.lang.Short", "getShort");
+        parseMap.put("java.lang.Integer", "getInteger");
+        parseMap.put("java.lang.Long", "getLong");
+        parseMap.put("java.lang.Float", "getFloat");
+        parseMap.put("java.lang.Double", "getDouble");
+        parseMap.put("java.math.BigDecimal", "getBigDecimal");
+        parseMap.put("java.math.BigInteger", "getBigInteger");
+        parseMap.put("java.lang.String", "getString");
+        parseMap.put("java.util.Date", "getDate");
+         */
+        if("java.lang.String".equals(sjlx)){
+//            Arrays.asList("==",">","<",">=","<=","!=").contains(compareOperator)
+            if ("==".equals(compareOperator)) {
+                return leftValue.compareTo(rightValue) == 0;
+            }else if(">".equals(compareOperator)){
+                return leftValue.compareTo(rightValue) > 0;
+            }else if("<".equals(compareOperator)){
+                return leftValue.compareTo(rightValue) < 0;
+            }else if(">=".equals(compareOperator)){
+                return leftValue.compareTo(rightValue) >= 0;
+            }else if("<=".equals(compareOperator)){
+                return leftValue.compareTo(rightValue) <= 0;
+            }else if("!=".equals(compareOperator)){
+                return leftValue.compareTo(rightValue) != 0;
+            }else if("contains".equals(compareOperator)){
+                return leftValue.indexOf(rightValue) > 0;
+            }else {
+                throw new RuntimeException("比较操作不合法");
+            }
+        }else if("java.lang.Boolean".equals(sjlx)){
+            if ("==true".equals(compareOperator)) {
+                return "true".equals(leftValue);
+            }else if("==false".equals(compareOperator)){
+                return "false".equals(leftValue);
+            }else {
+                throw new RuntimeException("比较操作不合法");
+            }
+        }
+        else if("java.util.Date".equals(sjlx)){
+            throw new RuntimeException("日期比较未实现");
+        }
+        else if(Arrays.asList("java.lang.Byte","java.lang.Short","java.lang.Integer"
+                ,"java.lang.Long","java.lang.Float","java.lang.Double"
+                ,"java.math.BigDecimal","java.math.BigInteger").contains(sjlx)){
+            //todo 类型转换(java.lang.Short)leftValue
+            if ("==".equals(compareOperator)) {
+                if ("java.lang.Integer".equals(sjlx)) {
+                    return Integer.compare(Integer.parseInt(leftValue), (Integer.parseInt(rightValue))) == 0;
+                }
+                return leftValue.compareTo(rightValue) == 0;
+            }else if(">".equals(compareOperator)){
+                if ("java.lang.Integer".equals(sjlx)) {
+                    return Integer.compare(Integer.parseInt(leftValue), (Integer.parseInt(rightValue))) > 0;
+                }
+                return leftValue.compareTo(rightValue) > 0;
+            }else if("<".equals(compareOperator)){
+                if ("java.lang.Integer".equals(sjlx)) {
+                    return Integer.compare(Integer.parseInt(leftValue), (Integer.parseInt(rightValue))) < 0;
+                }
+                return leftValue.compareTo(rightValue) < 0;
+            }else if(">=".equals(compareOperator)){
+                if ("java.lang.Integer".equals(sjlx)) {
+                    return Integer.compare(Integer.parseInt(leftValue), (Integer.parseInt(rightValue))) >= 0;
+                }
+                return leftValue.compareTo(rightValue) >= 0;
+            }else if("<=".equals(compareOperator)){
+                if ("java.lang.Integer".equals(sjlx)) {
+                    return Integer.compare(Integer.parseInt(leftValue), (Integer.parseInt(rightValue))) <= 0;
+                }
+                return leftValue.compareTo(rightValue) <= 0;
+            }else if("!=".equals(compareOperator)){
+                if ("java.lang.Integer".equals(sjlx)) {
+                    return Integer.compare(Integer.parseInt(leftValue), (Integer.parseInt(rightValue))) != 0;
+                }
+                return leftValue.compareTo(rightValue) != 0;
+            }else {
+                throw new RuntimeException("数值类型的数据比较操作不合法");
+            }
+        }
+        return  false;
     }
 
     /**

@@ -6,11 +6,15 @@
       "scoreReports": [
         {
           "subject": "math",
-          "score": 1
+          "score": 60
         },
         {
           "subject": "English",
           "score": 91
+        },
+        {
+          "subject": "English",
+          "score": 40
         }
       ]
 
