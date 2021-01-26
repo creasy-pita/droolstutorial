@@ -1,6 +1,7 @@
 package com.other;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.pojo.Person;
 import org.junit.Test;
@@ -18,6 +19,28 @@ import java.util.Date;
  * Created by lujq on 1/12/2021.
  */
 public class BigObjRule {
+
+//    @Test
+//    public void testBigObjJson() throws URISyntaxException, IOException {
+//        java.util.List<Object> a = new ArrayList<>();
+//        java.util.List b = new ArrayList();
+//
+//        KieServices kss = KieServices.Factory.get();
+//        KieContainer kc = kss.getKieClasspathContainer();
+//        KieSession ks =kc.newKieSession("bigobj");
+//        //查看resouce目录
+//        System.out.println(this.getClass().getResource("/").getPath());
+//        java.net.URL url = this.getClass().getResource("/bigobj.json");
+//        java.nio.file.Path resPath = java.nio.file.Paths.get(url.toURI());
+//        String jsonStr = new String(java.nio.file.Files.readAllBytes(resPath), "UTF8");
+//        JSONObject obj = JSON.parseObject(jsonStr);
+//        JSONArray objKeys = obj.getJSONArray("objKeysv2");
+//        for (Object objKey : objKeys) {
+//            System.out.println(objKey.toString());
+//        }
+//
+//    }
+
     @Test
     public void testBigObjRule() throws URISyntaxException, IOException {
 

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonArrayFormatVisitor;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -68,20 +69,26 @@ public class CollectFunction {
     }
 
 
-
-    public java.lang.Boolean arrv2(com.alibaba.fastjson.JSONObject gObj,String keysStr, String sjlxsStr,String compareOperatorStr,String rightOperandStr,String boolOpStr){
-        //boys.scoreReports.score>99 boys.scoreReports.score<2
-        boolean result = true;
+    /**
+     *
+     * @param gObj  以 boys.scoreReports.score > 90 and boys.scoreReports.score < 50为例
+     * @param keysStr  比如例子中的【boys.scoreReports.score 】
+     * @param sjlxsStr 比如例子中的【java.util.List,java.util.List,java.lang.Integer】
+     * @param compareOperatorStr 模式的比较符 比如例子中的 [>,<]
+     * @param rightOperandStr  右操作数 比如例子中的 [90,50]
+     * @param boolOpStr  模式间的布尔操作符 比如例子中的 [and]
+     * @param ruleName  规则名称 when中不能通过drools api访问，所以只能解析并通过参数参入
+     * @return
+     */
+    public java.lang.Boolean arrv2(com.alibaba.fastjson.JSONObject gObj,String keysStr, String sjlxsStr,String compareOperatorStr,String rightOperandStr,String boolOpStr,String ruleName){
         String[] keyList = keysStr.split("\\.");
         String[] sjlxList = sjlxsStr.split(",");
+        if(keyList.length<2)return false;
+        //主键路径 取前面部分
+        String objKeyPath = keysStr.substring(0, keysStr.lastIndexOf("."));
         gObj.put("lamadasetvalue",true);
-        //list.object.attribute
-        //list.list.attribute
-        //object.list.attribute
-        //object.list.object.attribute
-        //object.list.object.list.attribute
-        //object.attribute   不属于本范围  因为没有midstxxzdbsm
 
+        //object.attribute   不属于本范围  因为没有midstxxzdbsm
         //按key层次和各层次的数据类型解析获取最底层的实体
         Object currentObj = gObj;
         for (int keyIndex = 0; keyIndex < keyList.length; keyIndex++) {
@@ -126,10 +133,11 @@ public class CollectFunction {
         String[] compareOperatorList = compareOperatorStr.split(",");
         String[] rightOperandList = rightOperandStr.split(",");
         String[] boolOpList = boolOpStr.split(",");
-
+        JSONArray valuesForKeys = new JSONArray();
         if (currentObj instanceof JSONObject) {
 
-        } else if (currentObj instanceof JSONArray) {
+        }
+        else if (currentObj instanceof JSONArray) {
             ((JSONArray) currentObj).parallelStream().filter( f -> {
                         //todo 处理如下的复合表达式 ,先处理第一种不带先后顺序的
                         //  boolexpression1 ||boolexpression2 || boolexpression3
@@ -151,13 +159,36 @@ public class CollectFunction {
                             }
                         }
                         if(!re){
+                            /*
+                            "objKeys": {
+                                "F1.boys":["ID","name"],
+                                "F1.girls":["ID","name"]
+                              }
+                            */
+//                            JSONArray objKeys = gObj.getJSONObject("objKeys").getJSONArray(keysStr);
+                            JSONArray objKeys = gObj.getJSONObject("bigObjKeys").getJSONArray(objKeyPath);
+                            StringBuilder tipObjKeyInfo = new StringBuilder();
+                            JSONObject valuesForKey = new JSONObject();
+                            valuesForKeys.add(valuesForKey);
+                            for (Object objKey : objKeys) {
+                                tipObjKeyInfo.append (((JSONObject) f).getString(objKey.toString())).append(",");
+                                valuesForKey.put(objKey.toString(), ((JSONObject) f).getString(objKey.toString()));
+                            }
                             gObj.put("lamadasetvalue",false);
-                            System.out.println(String.format("当前值%s不符合内容",((JSONObject) f).getString(keyName) ));
+
+                            System.out.println(String.format("当前不符合记录的主键是%s", tipObjKeyInfo.toString()));
                         }
                         return  re;
                     }
             ).count();
         }
+        JSONObject objKeyPathObj = new JSONObject();
+        objKeyPathObj.put(objKeyPath, valuesForKeys);
+        gObj.put("valuesForKeys-"+ ruleName, objKeyPathObj);
+        Map<String, Object> valuesForKeys1 = objKeyPathObj;
+        System.out.println("-------------------------valuesForKeys1--------------------------------");
+        System.out.println(valuesForKeys1);
+        System.out.println("-------------------------valuesForKeys1--------------------------------");
         return gObj.getBoolean("lamadasetvalue");
     }
 

@@ -28,14 +28,20 @@ global com.alibaba.fastjson.JSONObject $obj
 //
 //end
 
+
 rule "大对象集合校验-双层或多层集合属性"
     when
 //        eval(new com.function.CollectFunction().arr($obj, "boys.scoreReports.score", "java.lang.Integer","<","50") )
-        eval(new com.function.CollectFunction().arrv2($obj, "boys.scoreReports.score", "java.util.List,java.util.List,java.lang.Integer",">,<","90,50","or") )
+        eval(new com.function.CollectFunction().arrv2($obj, "boys.scoreReports.score", "java.util.List,java.util.List,java.lang.Integer",">,<","90,50","or","大对象集合校验-双层或多层集合属性") )
     then
 
 end
 
+//function java.lang.Boolean setRuleName(com.alibaba.fastjson.JSONObject gObj,String ruleName){
+//    System.out.println("---------------------------------------------------------");
+//    gObj.put("ruleName", ruleName);
+//    return true;
+//}
 
 // combine.lista.age > 2 需要解读为遍历listb .age> 2
 //combine.lista.listb.age>2 需要解读为 遍历lista，再遍历listb .age> 2
