@@ -5,6 +5,8 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonArrayFormatVisitor;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -182,14 +184,25 @@ public class CollectFunction {
                     }
             ).count();
         }
-        JSONObject objKeyPathObj = new JSONObject();
-        objKeyPathObj.put(objKeyPath, valuesForKeys);
-        gObj.put("valuesForKeys-"+ ruleName, objKeyPathObj);
-        Map<String, Object> valuesForKeys1 = objKeyPathObj;
-        System.out.println("-------------------------valuesForKeys1--------------------------------");
-        System.out.println(valuesForKeys1);
-        System.out.println("-------------------------valuesForKeys1--------------------------------");
-        return gObj.getBoolean("lamadasetvalue");
+        Boolean result = gObj.getBoolean("lamadasetvalue");
+        if (!result) {
+            JSONObject objKeyPathObj = new JSONObject();
+            //todo 验证其他arrv2 调用会不会覆盖gObj中当前的 objKeyPath的内容
+            //放入内层的主键信息
+            objKeyPathObj.put(objKeyPath, valuesForKeys);
+            //放入外层的主键信息
+            JSONArray objKeys = gObj.getJSONArray("objKeys");
+            if (objKeys != null && objKeys.size()>0) {
+                for (Object objKey : objKeys) {
+                    objKeyPathObj.put(objKey.toString(),gObj.getString(objKey.toString()));
+                }
+            }
+            gObj.put("valuesForKeys-"+ ruleName, objKeyPathObj);
+            System.out.println("-------------------------valuesForKeys1--------------------------------");
+            System.out.println(objKeyPathObj);
+            System.out.println("-------------------------valuesForKeys1--------------------------------");
+        }
+        return result;
     }
 
 
@@ -240,40 +253,140 @@ public class CollectFunction {
         else if("java.util.Date".equals(sjlx)){
             throw new RuntimeException("日期比较未实现");
         }
-        else if(Arrays.asList("java.lang.Byte","java.lang.Short","java.lang.Integer"
-                ,"java.lang.Long","java.lang.Float","java.lang.Double"
-                ,"java.math.BigDecimal","java.math.BigInteger").contains(sjlx)){
-            //todo 类型转换(java.lang.Short)leftValue
+        else if("java.lang.Byte".equals(sjlx)){
             if ("==".equals(compareOperator)) {
-                if ("java.lang.Integer".equals(sjlx)) {
-                    return Integer.compare(Integer.parseInt(leftValue), (Integer.parseInt(rightValue))) == 0;
-                }
-                return leftValue.compareTo(rightValue) == 0;
+                return Byte.parseByte(leftValue) == Byte.parseByte(rightValue);
             }else if(">".equals(compareOperator)){
-                if ("java.lang.Integer".equals(sjlx)) {
-                    return Integer.compare(Integer.parseInt(leftValue), (Integer.parseInt(rightValue))) > 0;
-                }
-                return leftValue.compareTo(rightValue) > 0;
+                return Byte.parseByte(leftValue) > Byte.parseByte(rightValue);
             }else if("<".equals(compareOperator)){
-                if ("java.lang.Integer".equals(sjlx)) {
-                    return Integer.compare(Integer.parseInt(leftValue), (Integer.parseInt(rightValue))) < 0;
-                }
-                return leftValue.compareTo(rightValue) < 0;
+                return Byte.parseByte(leftValue) < Byte.parseByte(rightValue);
             }else if(">=".equals(compareOperator)){
-                if ("java.lang.Integer".equals(sjlx)) {
-                    return Integer.compare(Integer.parseInt(leftValue), (Integer.parseInt(rightValue))) >= 0;
-                }
-                return leftValue.compareTo(rightValue) >= 0;
+                return Byte.parseByte(leftValue) >= Byte.parseByte(rightValue);
             }else if("<=".equals(compareOperator)){
-                if ("java.lang.Integer".equals(sjlx)) {
-                    return Integer.compare(Integer.parseInt(leftValue), (Integer.parseInt(rightValue))) <= 0;
-                }
-                return leftValue.compareTo(rightValue) <= 0;
+                return Byte.parseByte(leftValue) <= Byte.parseByte(rightValue);
             }else if("!=".equals(compareOperator)){
-                if ("java.lang.Integer".equals(sjlx)) {
-                    return Integer.compare(Integer.parseInt(leftValue), (Integer.parseInt(rightValue))) != 0;
-                }
-                return leftValue.compareTo(rightValue) != 0;
+                return Byte.parseByte(leftValue) != Byte.parseByte(rightValue);
+            }else {
+                throw new RuntimeException("数值类型的数据比较操作不合法");
+            }
+        }
+        else if("java.lang.Short".equals(sjlx)){
+            if ("==".equals(compareOperator)) {
+                return Short.parseShort(leftValue) == Short.parseShort(rightValue);
+            }else if(">".equals(compareOperator)){
+                return Short.parseShort(leftValue) > Short.parseShort(rightValue);
+            }else if("<".equals(compareOperator)){
+                return Short.parseShort(leftValue) < Short.parseShort(rightValue);
+            }else if(">=".equals(compareOperator)){
+                return Short.parseShort(leftValue) >= Short.parseShort(rightValue);
+            }else if("<=".equals(compareOperator)){
+                return Short.parseShort(leftValue) <= Short.parseShort(rightValue);
+            }else if("!=".equals(compareOperator)){
+                return Short.parseShort(leftValue) != Short.parseShort(rightValue);
+            }else {
+                throw new RuntimeException("数值类型的数据比较操作不合法");
+            }
+        }
+        else if("java.lang.Integer".equals(sjlx)){
+            if ("==".equals(compareOperator)) {
+                return Integer.parseInt(leftValue) == Integer.parseInt(rightValue);
+            }else if(">".equals(compareOperator)){
+                return Integer.parseInt(leftValue) > Integer.parseInt(rightValue);
+            }else if("<".equals(compareOperator)){
+                return Integer.parseInt(leftValue) < Integer.parseInt(rightValue);
+            }else if(">=".equals(compareOperator)){
+                return Integer.parseInt(leftValue) >= Integer.parseInt(rightValue);
+            }else if("<=".equals(compareOperator)){
+                return Integer.parseInt(leftValue) <= Integer.parseInt(rightValue);
+            }else if("!=".equals(compareOperator)){
+                return Integer.parseInt(leftValue) != Integer.parseInt(rightValue);
+            }else {
+                throw new RuntimeException("数值类型的数据比较操作不合法");
+            }
+        }
+        else if("java.lang.Long".equals(sjlx)){
+            if ("==".equals(compareOperator)) {
+                return Long.parseLong(leftValue) == Long.parseLong(rightValue);
+            }else if(">".equals(compareOperator)){
+                return Long.parseLong(leftValue) > Long.parseLong(rightValue);
+            }else if("<".equals(compareOperator)){
+                return Long.parseLong(leftValue) < Long.parseLong(rightValue);
+            }else if(">=".equals(compareOperator)){
+                return Long.parseLong(leftValue) >= Long.parseLong(rightValue);
+            }else if("<=".equals(compareOperator)){
+                return Long.parseLong(leftValue) <= Long.parseLong(rightValue);
+            }else if("!=".equals(compareOperator)){
+                return Long.parseLong(leftValue) != Long.parseLong(rightValue);
+            }else {
+                throw new RuntimeException("数值类型的数据比较操作不合法");
+            }
+        }
+        else if("java.lang.Float".equals(sjlx)){
+            if ("==".equals(compareOperator)) {
+                return Float.parseFloat(leftValue) == Float.parseFloat(rightValue);
+            }else if(">".equals(compareOperator)){
+                return Float.parseFloat(leftValue) > Float.parseFloat(rightValue);
+            }else if("<".equals(compareOperator)){
+                return Float.parseFloat(leftValue) < Float.parseFloat(rightValue);
+            }else if(">=".equals(compareOperator)){
+                return Float.parseFloat(leftValue) >= Float.parseFloat(rightValue);
+            }else if("<=".equals(compareOperator)){
+                return Float.parseFloat(leftValue) <= Float.parseFloat(rightValue);
+            }else if("!=".equals(compareOperator)){
+                return Float.parseFloat(leftValue) != Float.parseFloat(rightValue);
+            }else {
+                throw new RuntimeException("数值类型的数据比较操作不合法");
+            }
+        }
+        else if("java.lang.Double".equals(sjlx)){
+            if ("==".equals(compareOperator)) {
+                return Double.parseDouble(leftValue) == Double.parseDouble(rightValue);
+            }else if(">".equals(compareOperator)){
+                return Double.parseDouble(leftValue) > Double.parseDouble(rightValue);
+            }else if("<".equals(compareOperator)){
+                return Double.parseDouble(leftValue) < Double.parseDouble(rightValue);
+            }else if(">=".equals(compareOperator)){
+                return Double.parseDouble(leftValue) >= Double.parseDouble(rightValue);
+            }else if("<=".equals(compareOperator)){
+                return Double.parseDouble(leftValue) <= Double.parseDouble(rightValue);
+            }else if("!=".equals(compareOperator)){
+                return Double.parseDouble(leftValue) != Double.parseDouble(rightValue);
+            }else {
+                throw new RuntimeException("数值类型的数据比较操作不合法");
+            }
+        }
+        else if("java.math.BigDecimal".equals(sjlx)){
+            int i = new BigDecimal(leftValue).compareTo(new BigDecimal(rightValue));
+            if ("==".equals(compareOperator)) {
+                return i ==0;
+            }else if(">".equals(compareOperator)){
+                return i > 0;
+            }else if("<".equals(compareOperator)){
+                return i < 0;
+            }else if(">=".equals(compareOperator)){
+                return i >= 0;
+            }else if("<=".equals(compareOperator)){
+                return i <=0;
+            }else if("!=".equals(compareOperator)){
+                return i !=0;
+            }else {
+                throw new RuntimeException("数值类型的数据比较操作不合法");
+            }
+        }
+        else if("java.math.BigInteger".equals(sjlx)){
+            int i = new BigInteger(leftValue).compareTo(new BigInteger(rightValue));
+            if ("==".equals(compareOperator)) {
+                return i ==0;
+            }else if(">".equals(compareOperator)){
+                return i > 0;
+            }else if("<".equals(compareOperator)){
+                return i < 0;
+            }else if(">=".equals(compareOperator)){
+                return i >= 0;
+            }else if("<=".equals(compareOperator)){
+                return i <=0;
+            }else if("!=".equals(compareOperator)){
+                return i !=0;
             }else {
                 throw new RuntimeException("数值类型的数据比较操作不合法");
             }

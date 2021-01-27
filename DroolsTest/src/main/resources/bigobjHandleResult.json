@@ -1,0 +1,118 @@
+//大对象集合属性校验后的返回结果，包含数据部分，valuesForKeys+rulename部分（用于记录校验不通的记录）
+{
+  "bigObjKeys": {
+    "boys.scoreReports": [
+      "subject",
+      "average",
+      "score"
+    ]
+  },
+  "产权": {
+    "boys": [
+      {
+        "name": "",
+        "ID": "001x",
+        "age": 1
+      },
+      {
+        "name": "boy2",
+        "ID": "002x",
+        "age": 2
+      }
+    ]
+  },
+  "f": {
+    "boys": [
+      {
+        "name": "",
+        "ID": "001x",
+        "age": 1
+      },
+      {
+        "name": "boy2",
+        "ID": "002x",
+        "age": 2
+      }
+    ]
+  },
+  "valuesForKeys-大对象集合校验-双层或多层集合属性": {
+    //name,age时 objkey部分 ,boys.scoreReports时大对象部分
+    "name": "1",
+    "age": 20,
+    "boys.scoreReports": [
+      {
+        "average": "55",
+        "score": "61",
+        "subject": "math"
+      },
+      {
+        "average": "78",
+        "score": "90",
+        "subject": "Gym"
+      },
+      {
+        "average": "55",
+        "score": "60",
+        "subject": "math"
+      }
+    ]
+  },
+  "name": "1",
+  "age": 20,
+  "boys": [
+    {
+      "scoreReports": [
+        {
+          "average": 55,
+          "score": 60,
+          "subject": "math"
+        },
+        {
+          "average": 80,
+          "score": 91,
+          "subject": "English"
+        },
+        {
+          "average": 78,
+          "score": 40,
+          "subject": "Gym"
+        },
+        {
+          "average": 55,
+          "score": 61,
+          "subject": "math"
+        },
+        {
+          "average": 80,
+          "score": 100,
+          "subject": "English"
+        },
+        {
+          "average": 78,
+          "score": 90,
+          "subject": "Gym"
+        }
+      ],
+      "name": "Tom"
+    },
+    {
+      "scoreReports": [
+        {
+          "$ref": "$.boys[0].scoreReports[3]"
+        },
+        {
+          "$ref": "$.boys[0].scoreReports[4]"
+        },
+        {
+          "$ref": "$.boys[0].scoreReports[5]"
+        }
+      ],
+      "name": "Creasy"
+    }
+  ],
+  "objKeys": [
+    "name",
+    "age"
+  ],
+  "lamadasetvalue": false
+}
