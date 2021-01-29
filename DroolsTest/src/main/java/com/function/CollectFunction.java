@@ -8,8 +8,10 @@ import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonArrayFormatVisitor;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -82,14 +84,14 @@ public class CollectFunction {
      * @param ruleName  规则名称 when中不能通过drools api访问，所以只能解析并通过参数参入
      * @return
      */
-    public java.lang.Boolean arrv2(com.alibaba.fastjson.JSONObject gObj,String keysStr, String sjlxsStr,String compareOperatorStr,String rightOperandStr,String boolOpStr,String ruleName){
+    public java.lang.Boolean collectionHandle(com.alibaba.fastjson.JSONObject gObj,String keysStr, String sjlxsStr,String compareOperatorStr,String rightOperandStr,String boolOpStr,String ruleName){
         String[] keyList = keysStr.split("\\.");
         String[] sjlxList = sjlxsStr.split(",");
         if(keyList.length<2)return false;
         //主键路径 取前面部分
         String objKeyPath = keysStr.substring(0, keysStr.lastIndexOf("."));
-        gObj.put("lamadasetvalue",true);
-
+        Map<String ,Boolean> resultMap = new HashMap<>();
+        resultMap.put("result",true);
         //object.attribute   不属于本范围  因为没有midstxxzdbsm
         //按key层次和各层次的数据类型解析获取最底层的实体
         Object currentObj = gObj;
@@ -120,8 +122,11 @@ public class CollectFunction {
                     //JSONArray中取JSONArray
                     currentObj = ((JSONArray) currentObj).stream().map(f -> ((JSONObject) f).getJSONArray(key))
                             .reduce((jsonArr1,jsonArr2) ->{
-                                jsonArr1.addAll(jsonArr2);
-                                return  jsonArr1;
+                                //jsonArr1.addAll(jsonArr2); //此做法会引起 $obj jsonobject 解析出现$ref的问题
+                                JSONArray newJa = new JSONArray();
+                                newJa.addAll(jsonArr1);
+                                newJa.addAll(jsonArr2);
+                                return  newJa;
                             }).orElse(null);
                 }
             }
@@ -136,11 +141,13 @@ public class CollectFunction {
         String[] rightOperandList = rightOperandStr.split(",");
         String[] boolOpList = boolOpStr.split(",");
         JSONArray valuesForKeys = new JSONArray();
+        List<String> bigObjKeys = getObjKeys(gObj, com.function.DroolsUtil.OBJ_KEYS, objKeyPath);
+        List<String> objKeys = getObjKeys(gObj, com.function.DroolsUtil.OBJ_KEYS,null);
         if (currentObj instanceof JSONObject) {
 
         }
         else if (currentObj instanceof JSONArray) {
-            ((JSONArray) currentObj).parallelStream().filter( f -> {
+            ((JSONArray) currentObj).stream().filter( f -> {
                         //todo 处理如下的复合表达式 ,先处理第一种不带先后顺序的
                         //  boolexpression1 ||boolexpression2 || boolexpression3
                         //  boolexpression1 || (boolexpression2 && boolexpression3)
@@ -161,67 +168,65 @@ public class CollectFunction {
                             }
                         }
                         if(!re){
-                            /*
-                            "objKeys": {
-                                "F1.boys":["ID","name"],
-                                "F1.girls":["ID","name"]
-                              }
-                            */
-//                            JSONArray objKeys = gObj.getJSONObject("objKeys").getJSONArray(keysStr);
-                            JSONArray objKeys = gObj.getJSONObject("bigObjKeys").getJSONArray(objKeyPath);
-                            StringBuilder tipObjKeyInfo = new StringBuilder();
-                            JSONObject valuesForKey = new JSONObject();
-                            valuesForKeys.add(valuesForKey);
-                            for (Object objKey : objKeys) {
-                                tipObjKeyInfo.append (((JSONObject) f).getString(objKey.toString())).append(",");
-                                valuesForKey.put(objKey.toString(), ((JSONObject) f).getString(objKey.toString()));
+                            if (bigObjKeys != null) {
+                                JSONObject valuesForKey = new JSONObject();
+                                valuesForKeys.add(valuesForKey);
+                                for (String objKey : bigObjKeys) {
+                                    valuesForKey.put(objKey.toString(), ((JSONObject) f).getString(objKey.toString()));
+                                }
                             }
-                            gObj.put("lamadasetvalue",false);
-
-                            System.out.println(String.format("当前不符合记录的主键是%s", tipObjKeyInfo.toString()));
+                            resultMap.put("result", false);
                         }
                         return  re;
                     }
             ).count();
         }
-        Boolean result = gObj.getBoolean("lamadasetvalue");
+        Boolean result = resultMap.get("result");
         if (!result) {
             JSONObject objKeyPathObj = new JSONObject();
             //todo 验证其他arrv2 调用会不会覆盖gObj中当前的 objKeyPath的内容
-            //放入内层的主键信息
+            //放入内层主键信息
             objKeyPathObj.put(objKeyPath, valuesForKeys);
             //放入外层的主键信息
-            JSONArray objKeys = gObj.getJSONArray("objKeys");
-            if (objKeys != null && objKeys.size()>0) {
-                for (Object objKey : objKeys) {
-                    objKeyPathObj.put(objKey.toString(),gObj.getString(objKey.toString()));
+            if (objKeys != null) {
+                for (String objKey : objKeys) {
+                    objKeyPathObj.put(objKey,gObj.getString(objKey));
                 }
             }
-            gObj.put("valuesForKeys-"+ ruleName, objKeyPathObj);
-            System.out.println("-------------------------valuesForKeys1--------------------------------");
-            System.out.println(objKeyPathObj);
-            System.out.println("-------------------------valuesForKeys1--------------------------------");
+            gObj.put( com.function.DroolsUtil.VALUES_FOR_KEYS + "-" + ruleName, objKeyPathObj);
         }
         return result;
     }
 
+    /**
+     * 内层或外层主键
+     * 比如  objKeys:["name","age",{"f.a":["name","age"]}]
+     * 内层是{"f.a":["name","age"]} 部分
+     * 外层是{"f.a":["name","age"]} 部分
+     * @param gObj
+     * @param bigObjKeysName
+     * @return
+     */
+    public List<String> getObjKeys(com.alibaba.fastjson.JSONObject gObj,String bigObjKeysName,String objKeyPath){
+        JSONArray array = gObj.containsKey(bigObjKeysName)?gObj.getJSONArray(bigObjKeysName):null;
+        if (array != null) {
+            if (objKeyPath == null) {
+                return array.stream().filter(item -> item instanceof String).map(Object::toString).collect(Collectors.toList());
+            }else {
+                List<Object> collect = array.stream().filter(item -> item instanceof JSONObject && ((JSONObject) item).containsKey(objKeyPath)).collect(Collectors.toList());
+                if (collect.size()>0 ) {
+                    JSONArray jsonArray = ((JSONObject) collect.get(0)).getJSONArray(objKeyPath);
+                    if (jsonArray !=null && jsonArray.size()>0) {
+                        return jsonArray.stream().map(Object::toString).collect(Collectors.toList());
+                    }
+                }
+            }
+        }
+        return null;
+    }
 
     public boolean Compare(String leftValue,String rightValue, String sjlx, String compareOperator){
         //todo 考虑所有操作符 "==",">","<",">=","<=","!=",不为空,为空,为真,为假,为空（含空串),不为空（含空串）,包含
-        //todo 考虑所有数据类型
-        /*
-        parseMap.put("java.lang.Boolean", "getBoolean");
-        parseMap.put("java.lang.Byte", "getByte");
-        parseMap.put("java.lang.Short", "getShort");
-        parseMap.put("java.lang.Integer", "getInteger");
-        parseMap.put("java.lang.Long", "getLong");
-        parseMap.put("java.lang.Float", "getFloat");
-        parseMap.put("java.lang.Double", "getDouble");
-        parseMap.put("java.math.BigDecimal", "getBigDecimal");
-        parseMap.put("java.math.BigInteger", "getBigInteger");
-        parseMap.put("java.lang.String", "getString");
-        parseMap.put("java.util.Date", "getDate");
-         */
         if("java.lang.String".equals(sjlx)){
 //            Arrays.asList("==",">","<",">=","<=","!=").contains(compareOperator)
             if ("==".equals(compareOperator)) {
@@ -241,7 +246,8 @@ public class CollectFunction {
             }else {
                 throw new RuntimeException("比较操作不合法");
             }
-        }else if("java.lang.Boolean".equals(sjlx)){
+        }
+        else if("java.lang.Boolean".equals(sjlx)){
             if ("==true".equals(compareOperator)) {
                 return "true".equals(leftValue);
             }else if("==false".equals(compareOperator)){
@@ -250,146 +256,53 @@ public class CollectFunction {
                 throw new RuntimeException("比较操作不合法");
             }
         }
+        else if(Arrays.asList("java.lang.Integer","java.math.BigDecimal","java.lang.Long"
+                ,"java.lang.Float","java.lang.Double"
+                ,"java.lang.Short","java.lang.Byte"
+                ,"java.math.BigInteger").contains(sjlx)){
+            int re = 0;
+            if("java.lang.Integer".equals(sjlx)){
+                re = new Integer(leftValue).compareTo(new Integer(rightValue));
+            }
+            else if("java.math.BigDecimal".equals(sjlx)){
+                re = new BigDecimal(leftValue).compareTo(new BigDecimal(rightValue));
+            }
+            else if("java.lang.Long".equals(sjlx)){
+                re = new Long(leftValue).compareTo(new Long(rightValue));
+            }
+            else if("java.lang.Float".equals(sjlx)){
+                re = new Float(leftValue).compareTo(new Float(rightValue));
+            }
+            else if("java.lang.Double".equals(sjlx)){
+                re = new Double(leftValue).compareTo(new Double(rightValue));
+            }
+            else if("java.lang.Short".equals(sjlx)){
+                re = new Short(leftValue).compareTo(new Short(rightValue));
+            }
+            else if("java.lang.Byte".equals(sjlx)){
+                re = new Byte(leftValue).compareTo(new Byte(rightValue));
+            }
+            else if("java.math.BigInteger".equals(sjlx)){
+                re = new BigInteger(leftValue).compareTo(new BigInteger(rightValue));
+            }
+            if ("==".equals(compareOperator)) {
+                return re == 0;
+            }else if(">".equals(compareOperator)){
+                return re > 0;
+            }else if("<".equals(compareOperator)){
+                return re < 0;
+            }else if(">=".equals(compareOperator)){
+                return re >= 0;
+            }else if("<=".equals(compareOperator)){
+                return re <= 0;
+            }else if("!=".equals(compareOperator)){
+                return re != 0;
+            }else {
+                throw new RuntimeException("数值类型的数据比较操作不合法");
+            }
+        }
         else if("java.util.Date".equals(sjlx)){
             throw new RuntimeException("日期比较未实现");
-        }
-        else if("java.lang.Byte".equals(sjlx)){
-            if ("==".equals(compareOperator)) {
-                return Byte.parseByte(leftValue) == Byte.parseByte(rightValue);
-            }else if(">".equals(compareOperator)){
-                return Byte.parseByte(leftValue) > Byte.parseByte(rightValue);
-            }else if("<".equals(compareOperator)){
-                return Byte.parseByte(leftValue) < Byte.parseByte(rightValue);
-            }else if(">=".equals(compareOperator)){
-                return Byte.parseByte(leftValue) >= Byte.parseByte(rightValue);
-            }else if("<=".equals(compareOperator)){
-                return Byte.parseByte(leftValue) <= Byte.parseByte(rightValue);
-            }else if("!=".equals(compareOperator)){
-                return Byte.parseByte(leftValue) != Byte.parseByte(rightValue);
-            }else {
-                throw new RuntimeException("数值类型的数据比较操作不合法");
-            }
-        }
-        else if("java.lang.Short".equals(sjlx)){
-            if ("==".equals(compareOperator)) {
-                return Short.parseShort(leftValue) == Short.parseShort(rightValue);
-            }else if(">".equals(compareOperator)){
-                return Short.parseShort(leftValue) > Short.parseShort(rightValue);
-            }else if("<".equals(compareOperator)){
-                return Short.parseShort(leftValue) < Short.parseShort(rightValue);
-            }else if(">=".equals(compareOperator)){
-                return Short.parseShort(leftValue) >= Short.parseShort(rightValue);
-            }else if("<=".equals(compareOperator)){
-                return Short.parseShort(leftValue) <= Short.parseShort(rightValue);
-            }else if("!=".equals(compareOperator)){
-                return Short.parseShort(leftValue) != Short.parseShort(rightValue);
-            }else {
-                throw new RuntimeException("数值类型的数据比较操作不合法");
-            }
-        }
-        else if("java.lang.Integer".equals(sjlx)){
-            if ("==".equals(compareOperator)) {
-                return Integer.parseInt(leftValue) == Integer.parseInt(rightValue);
-            }else if(">".equals(compareOperator)){
-                return Integer.parseInt(leftValue) > Integer.parseInt(rightValue);
-            }else if("<".equals(compareOperator)){
-                return Integer.parseInt(leftValue) < Integer.parseInt(rightValue);
-            }else if(">=".equals(compareOperator)){
-                return Integer.parseInt(leftValue) >= Integer.parseInt(rightValue);
-            }else if("<=".equals(compareOperator)){
-                return Integer.parseInt(leftValue) <= Integer.parseInt(rightValue);
-            }else if("!=".equals(compareOperator)){
-                return Integer.parseInt(leftValue) != Integer.parseInt(rightValue);
-            }else {
-                throw new RuntimeException("数值类型的数据比较操作不合法");
-            }
-        }
-        else if("java.lang.Long".equals(sjlx)){
-            if ("==".equals(compareOperator)) {
-                return Long.parseLong(leftValue) == Long.parseLong(rightValue);
-            }else if(">".equals(compareOperator)){
-                return Long.parseLong(leftValue) > Long.parseLong(rightValue);
-            }else if("<".equals(compareOperator)){
-                return Long.parseLong(leftValue) < Long.parseLong(rightValue);
-            }else if(">=".equals(compareOperator)){
-                return Long.parseLong(leftValue) >= Long.parseLong(rightValue);
-            }else if("<=".equals(compareOperator)){
-                return Long.parseLong(leftValue) <= Long.parseLong(rightValue);
-            }else if("!=".equals(compareOperator)){
-                return Long.parseLong(leftValue) != Long.parseLong(rightValue);
-            }else {
-                throw new RuntimeException("数值类型的数据比较操作不合法");
-            }
-        }
-        else if("java.lang.Float".equals(sjlx)){
-            if ("==".equals(compareOperator)) {
-                return Float.parseFloat(leftValue) == Float.parseFloat(rightValue);
-            }else if(">".equals(compareOperator)){
-                return Float.parseFloat(leftValue) > Float.parseFloat(rightValue);
-            }else if("<".equals(compareOperator)){
-                return Float.parseFloat(leftValue) < Float.parseFloat(rightValue);
-            }else if(">=".equals(compareOperator)){
-                return Float.parseFloat(leftValue) >= Float.parseFloat(rightValue);
-            }else if("<=".equals(compareOperator)){
-                return Float.parseFloat(leftValue) <= Float.parseFloat(rightValue);
-            }else if("!=".equals(compareOperator)){
-                return Float.parseFloat(leftValue) != Float.parseFloat(rightValue);
-            }else {
-                throw new RuntimeException("数值类型的数据比较操作不合法");
-            }
-        }
-        else if("java.lang.Double".equals(sjlx)){
-            if ("==".equals(compareOperator)) {
-                return Double.parseDouble(leftValue) == Double.parseDouble(rightValue);
-            }else if(">".equals(compareOperator)){
-                return Double.parseDouble(leftValue) > Double.parseDouble(rightValue);
-            }else if("<".equals(compareOperator)){
-                return Double.parseDouble(leftValue) < Double.parseDouble(rightValue);
-            }else if(">=".equals(compareOperator)){
-                return Double.parseDouble(leftValue) >= Double.parseDouble(rightValue);
-            }else if("<=".equals(compareOperator)){
-                return Double.parseDouble(leftValue) <= Double.parseDouble(rightValue);
-            }else if("!=".equals(compareOperator)){
-                return Double.parseDouble(leftValue) != Double.parseDouble(rightValue);
-            }else {
-                throw new RuntimeException("数值类型的数据比较操作不合法");
-            }
-        }
-        else if("java.math.BigDecimal".equals(sjlx)){
-            int i = new BigDecimal(leftValue).compareTo(new BigDecimal(rightValue));
-            if ("==".equals(compareOperator)) {
-                return i ==0;
-            }else if(">".equals(compareOperator)){
-                return i > 0;
-            }else if("<".equals(compareOperator)){
-                return i < 0;
-            }else if(">=".equals(compareOperator)){
-                return i >= 0;
-            }else if("<=".equals(compareOperator)){
-                return i <=0;
-            }else if("!=".equals(compareOperator)){
-                return i !=0;
-            }else {
-                throw new RuntimeException("数值类型的数据比较操作不合法");
-            }
-        }
-        else if("java.math.BigInteger".equals(sjlx)){
-            int i = new BigInteger(leftValue).compareTo(new BigInteger(rightValue));
-            if ("==".equals(compareOperator)) {
-                return i ==0;
-            }else if(">".equals(compareOperator)){
-                return i > 0;
-            }else if("<".equals(compareOperator)){
-                return i < 0;
-            }else if(">=".equals(compareOperator)){
-                return i >= 0;
-            }else if("<=".equals(compareOperator)){
-                return i <=0;
-            }else if("!=".equals(compareOperator)){
-                return i !=0;
-            }else {
-                throw new RuntimeException("数值类型的数据比较操作不合法");
-            }
         }
         return  false;
     }
@@ -403,7 +316,7 @@ public class CollectFunction {
      * @param rightOperand 右操作数 先固定传值正整数
      * @return
      */
-    public java.lang.Boolean collectionHandle(com.alibaba.fastjson.JSONObject gObj,String namePath, String sjlx,String compareOperator,String rightOperand){
+    public java.lang.Boolean collectionHandleold(com.alibaba.fastjson.JSONObject gObj,String namePath, String sjlx,String compareOperator,String rightOperand){
         if (gObj== null) {
             return false;
         }

@@ -4,6 +4,7 @@
   "boys": [
     {
       "name":"Tom",
+       "age": 19,
       "scoreReports": [
         {
           "average": 55,
@@ -25,6 +26,7 @@
     },
     {
       "name":"Creasy",
+      "age": 18,
       "scoreReports": [
         {
           "average": 55,
@@ -43,42 +45,30 @@
         }
       ]
 
+    },
+    {
+      "name":"oliver",
+      "age": 8,
+      "scoreReports": [
+        {
+          "average": 10000,
+          "subject": "math",
+          "score": 50
+        }
+      ]
+
     }
   ],
-  "f": {
-    "boys": [
-      {
-        "ID": "001x",
-        "name": "",
-        "age": 1
-      },
-      {
-        "ID": "002x",
-        "name": "boy2",
-        "age": 2
-      }
-    ]
-  },
-  "产权": {
-    "boys": [
-      {
-        "ID": "001x",
-        "name": "",
-        "age": 1
-      },
-      {
-        "ID": "002x",
-        "name": "boy2",
-        "age": 2
-      }
-    ]
-  },
   "bigObjKeys":{
     "boys.scoreReports": [
       "subject","average","score"
+    ],
+    "boys": [
+      "name","age"
     ]
   },
   "objKeys":[
+    {"boys.scoreReports": null},
      "name",
      "age"
   ]
