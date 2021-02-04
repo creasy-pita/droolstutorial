@@ -1,6 +1,17 @@
 {
+  "姓名":"hello",
+  "field1":"aa",
+  "schoolobj1":{
+    "schoolobj11":{
+      "field1":"aa",
+      "field2":"aa"
+    }
+  },
   "name":"1",
   "age": 20,
+  "sqrlx":1,
+  "sqryddh":null,
+  "borndate": "\"11\"",
   "boys": [
     {
       "name":"Tom",
@@ -9,17 +20,20 @@
         {
           "average": 55,
           "subject": "math",
-          "score": 60
+          "score": 20,
+          "IsPublic": true
         },
         {
           "average": 80,
           "subject": "English",
-          "score": 91
+          "score": 20,
+          "IsPublic": true
         },
         {
           "average": 78,
           "subject": "Gym",
-          "score": 40
+          "score": 20,
+          "IsPublic": true
         }
       ]
 
@@ -31,17 +45,20 @@
         {
           "average": 55,
           "subject": "math",
-          "score": 61
+          "score": 61,
+          "IsPublic": true
         },
         {
           "average": 80,
           "subject": "English",
-          "score": 100
+          "score": 100,
+          "IsPublic": true
         },
         {
           "average": 78,
           "subject": "Gym",
-          "score": 90
+          "score": 90,
+          "IsPublic": true
         }
       ]
 
@@ -53,7 +70,8 @@
         {
           "average": 10000,
           "subject": "math",
-          "score": 50
+          "score": 50,
+          "IsPublic": true
         }
       ]
 
@@ -68,7 +86,9 @@
     ]
   },
   "objKeys":[
-    {"boys.scoreReports": null},
+    {"boys.scoreReports": [
+      "subject","average","score"
+    ]},
      "name",
      "age"
   ]

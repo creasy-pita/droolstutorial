@@ -4,7 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonArrayFormatVisitor;
+import org.apache.commons.lang3.StringUtils;
 
+import java.beans.Expression;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -13,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+
+import static com.function.BooleanUtil.Compare;
 
 /**
  * Created by lujq on 1/22/2021.
@@ -74,28 +78,143 @@ public class CollectFunction {
 
 
     /**
-     *
-     * @param gObj  以 boys.scoreReports.score > 90 and boys.scoreReports.score < 50为例
-     * @param keysStr  比如例子中的【boys.scoreReports.score 】
-     * @param sjlxsStr 比如例子中的【java.util.List,java.util.List,java.lang.Integer】
-     * @param compareOperatorStr 模式的比较符 比如例子中的 [>,<]
-     * @param rightOperandStr  右操作数 比如例子中的 [90,50]
-     * @param boolOpStr  模式间的布尔操作符 比如例子中的 [and]
+     * 集合属性和标量值比较的处理方法 ，集合属性时带实体层次的
+     * todo sjlxsStr 为java.util.List,java.lang.Object,java.lang.Integer的处理方式
+     * todo  throw RuntimeException时后续错误的处理
+     * @param gObj  以 boys.scoreReports.score > 90 为例
+     * @param keysStr  集合属性数据在gObj中的key路径  比如例子中的【boys.scoreReports.score 】
+     * @param sjlxsStr 集合属性数据各层次的数据类型，比如例子中的【java.util.List,java.util.List,java.lang.Integer】
+     * @param compareOperator 模式的比较符 比如例子中的 >
+     * @param rightOperand  右操作数 比如例子中的 90
      * @param ruleName  规则名称 when中不能通过drools api访问，所以只能解析并通过参数参入
-     * @return
+     * @return collectionHandle
      */
-    public java.lang.Boolean collectionHandle(com.alibaba.fastjson.JSONObject gObj,String keysStr, String sjlxsStr,String compareOperatorStr,String rightOperandStr,String boolOpStr,String ruleName){
+    public java.lang.Boolean collectionFieldCompare(com.alibaba.fastjson.JSONObject gObj,String keysStr, String sjlxsStr,String compareOperator,String rightOperand,String ruleName){
         String[] keyList = keysStr.split("\\.");
         String[] sjlxList = sjlxsStr.split(",");
         if(keyList.length<2)return false;
-        //主键路径 取前面部分
+        //按从gObj取集合属性前面部分，比如 boys.scoreReports
         String objKeyPath = keysStr.substring(0, keysStr.lastIndexOf("."));
         Map<String ,Boolean> resultMap = new HashMap<>();
         resultMap.put("result",true);
-        //object.attribute   不属于本范围  因为没有midstxxzdbsm
+        //按集合属性数据的key路径从gObj解析获取属性数据
+        Object currentObj = gObj;
+        currentObj = getAttrObj(currentObj, keyList, sjlxList);
+        if(currentObj == null)return false;
+        String keyName = keyList[keyList.length - 1];
+        String sjlx = sjlxList[sjlxList.length - 1];
+
+        JSONArray valuesForKeys = new JSONArray();
+        List<String> bigObjKeys = getObjKeys(gObj, DroolsUtil.OBJ_KEYS, objKeyPath);
+        List<String> objKeys = getObjKeys(gObj, DroolsUtil.OBJ_KEYS,null);
+        if (currentObj instanceof JSONObject) {
+
+        }
+        else if (currentObj instanceof JSONArray) {
+            ((JSONArray) currentObj).parallelStream().filter( f -> {
+                        boolean re = Compare(((JSONObject) f).getString(keyName), rightOperand, sjlx, compareOperator);
+                        if(!re){
+                            if (bigObjKeys != null) {
+                                JSONObject valuesForKey = new JSONObject();
+                                valuesForKeys.add(valuesForKey);
+                                for (String objKey : bigObjKeys) {
+                                    valuesForKey.put(objKey, ((JSONObject) f).get(objKey));
+                                }
+                            }
+                            resultMap.put("result", false);
+                        }
+                        return  re;
+                    }
+            ).count();
+        }
+        Boolean result = resultMap.get("result");
+        if (!result) {
+            JSONObject objKeyPathObj = new JSONObject();
+            //todo 验证其他arrv2 调用会不会覆盖gObj中当前的 objKeyPath的内容
+            //放入内层主键信息
+            objKeyPathObj.put(objKeyPath, valuesForKeys);
+            //放入外层的主键信息
+            if (objKeys != null) {
+                for (String objKey : objKeys) {
+                    objKeyPathObj.put(objKey,gObj.get(objKey));
+                }
+            }
+            if(bigObjKeys!=null)
+                gObj.put( DroolsUtil.VALUES_FOR_KEYS + "-" + ruleName, objKeyPathObj);
+        }
+        return result;
+    }
+
+    /**
+     * todo 复合集合属性和标量值比较的处理方法 待开发
+     * @param gObj  以 boys.scoreReports.age > 18 || boys.scoreReports.cardType ==2 为例
+     * @param keysStr  比如例子中的【boys.scoreReports】
+     * @param sjlxsStr 比如例子中的【java.util.List,java.util.List】
+     * @param postfixTraversal    后缀遍历表达式字符串
+     * @param ruleName  规则名称 when中不能通过drools api访问，所以只能解析并通过参数参入
+     * @return
+     */
+    public java.lang.Boolean oneCollectionMultiFieldCompare(com.alibaba.fastjson.JSONObject gObj,String keysStr, String sjlxsStr,String postfixTraversal,String ruleName){
+        String[] keyList = keysStr.split("\\.");
+        String[] sjlxList = sjlxsStr.split(",");
+        if(keyList.length<2)return false;
+        Map<String ,Boolean> resultMap = new HashMap<>();
+        resultMap.put("result",true);
         //按key层次和各层次的数据类型解析获取最底层的实体
         Object currentObj = gObj;
+        currentObj = getAttrObj(currentObj, keyList, sjlxList);
+        if(currentObj == null)return false;
+        Node node = ExpressionTree.constructTree(postfixTraversal);
+
+        JSONArray valuesForKeys = new JSONArray();
+        List<String> bigObjKeys = getObjKeys(gObj, DroolsUtil.OBJ_KEYS, keysStr);
+        List<String> objKeys = getObjKeys(gObj, DroolsUtil.OBJ_KEYS,null);
+        if (currentObj instanceof JSONObject) {
+
+        }
+        else if (currentObj instanceof JSONArray) {
+            ((JSONArray) currentObj).stream().filter( f -> {
+                boolean re = ExpressionTree.caculate(node,(JSONObject) f);
+                    if(!re){
+                        if (bigObjKeys != null) {
+                            JSONObject valuesForKey = new JSONObject();
+                            valuesForKeys.add(valuesForKey);
+                            for (String objKey : bigObjKeys) {
+                                valuesForKey.put(objKey, ((JSONObject) f).get(objKey));
+                            }
+                        }
+                        resultMap.put("result", false);
+                    }
+                    return  re;
+                    }
+            ).count();
+        }
+        Boolean result = resultMap.get("result");
+        if (!result) {
+            JSONObject objKeyPathObj = new JSONObject();
+            //todo 验证其他arrv2 调用会不会覆盖gObj中当前的 objKeyPath的内容
+            //放入内层主键信息
+            objKeyPathObj.put(keysStr, valuesForKeys);
+            //放入外层的主键信息
+            if (objKeys != null) {
+                for (String objKey : objKeys) {
+                    objKeyPathObj.put(objKey,gObj.get(objKey));
+                }
+            }
+            if(bigObjKeys!=null)
+                gObj.put( DroolsUtil.VALUES_FOR_KEYS + "-" + ruleName, objKeyPathObj);
+        }
+        System.out.println("---------------------------------------------------------");
+        System.out.println(gObj);
+        System.out.println("---------------------------------------------------------");
+        return result;
+    }
+
+    private Object getAttrObj(Object currentObj, String[] keyList,String[] sjlxList){
         for (int keyIndex = 0; keyIndex < keyList.length; keyIndex++) {
+            if (currentObj == null) {
+                throw new RuntimeException("校验的实际数据格式与配置的数据格式不一致");
+            }
             String sjlx = sjlxList[keyIndex];
             //java.lang.Object
             if ("java.lang.Object".equals(sjlx)) {
@@ -134,68 +253,7 @@ public class CollectFunction {
                 break;
             }
         }
-        if(currentObj == null)return false;
-        String keyName = keyList[keyList.length - 1];
-        String sjlx = sjlxList[sjlxList.length - 1];
-        String[] compareOperatorList = compareOperatorStr.split(",");
-        String[] rightOperandList = rightOperandStr.split(",");
-        String[] boolOpList = boolOpStr.split(",");
-        JSONArray valuesForKeys = new JSONArray();
-        List<String> bigObjKeys = getObjKeys(gObj, com.function.DroolsUtil.OBJ_KEYS, objKeyPath);
-        List<String> objKeys = getObjKeys(gObj, com.function.DroolsUtil.OBJ_KEYS,null);
-        if (currentObj instanceof JSONObject) {
-
-        }
-        else if (currentObj instanceof JSONArray) {
-            ((JSONArray) currentObj).stream().filter( f -> {
-                        //todo 处理如下的复合表达式 ,先处理第一种不带先后顺序的
-                        //  boolexpression1 ||boolexpression2 || boolexpression3
-                        //  boolexpression1 || (boolexpression2 && boolexpression3)
-                        boolean re = true;
-                        for (int i = 0; i < compareOperatorList.length; i++) {
-                            String compareOperator = compareOperatorList[i];
-                            String rightOperand = rightOperandList[i];
-                            if(i == 0){
-                                re = re&&Compare(((JSONObject) f).getString(keyName), rightOperand, sjlx, compareOperator);
-                            }else
-                            {
-                                String boolOp = boolOpList[i - 1];
-                                if("and".equals(boolOp.toLowerCase())){
-                                    re = re&&Compare(((JSONObject) f).getString(keyName), rightOperand, sjlx, compareOperator);
-                                }else {
-                                    re = re||Compare(((JSONObject) f).getString(keyName), rightOperand, sjlx, compareOperator);
-                                }
-                            }
-                        }
-                        if(!re){
-                            if (bigObjKeys != null) {
-                                JSONObject valuesForKey = new JSONObject();
-                                valuesForKeys.add(valuesForKey);
-                                for (String objKey : bigObjKeys) {
-                                    valuesForKey.put(objKey.toString(), ((JSONObject) f).getString(objKey.toString()));
-                                }
-                            }
-                            resultMap.put("result", false);
-                        }
-                        return  re;
-                    }
-            ).count();
-        }
-        Boolean result = resultMap.get("result");
-        if (!result) {
-            JSONObject objKeyPathObj = new JSONObject();
-            //todo 验证其他arrv2 调用会不会覆盖gObj中当前的 objKeyPath的内容
-            //放入内层主键信息
-            objKeyPathObj.put(objKeyPath, valuesForKeys);
-            //放入外层的主键信息
-            if (objKeys != null) {
-                for (String objKey : objKeys) {
-                    objKeyPathObj.put(objKey,gObj.getString(objKey));
-                }
-            }
-            gObj.put( com.function.DroolsUtil.VALUES_FOR_KEYS + "-" + ruleName, objKeyPathObj);
-        }
-        return result;
+        return  currentObj;
     }
 
     /**
@@ -225,87 +283,6 @@ public class CollectFunction {
         return null;
     }
 
-    public boolean Compare(String leftValue,String rightValue, String sjlx, String compareOperator){
-        //todo 考虑所有操作符 "==",">","<",">=","<=","!=",不为空,为空,为真,为假,为空（含空串),不为空（含空串）,包含
-        if("java.lang.String".equals(sjlx)){
-//            Arrays.asList("==",">","<",">=","<=","!=").contains(compareOperator)
-            if ("==".equals(compareOperator)) {
-                return leftValue.compareTo(rightValue) == 0;
-            }else if(">".equals(compareOperator)){
-                return leftValue.compareTo(rightValue) > 0;
-            }else if("<".equals(compareOperator)){
-                return leftValue.compareTo(rightValue) < 0;
-            }else if(">=".equals(compareOperator)){
-                return leftValue.compareTo(rightValue) >= 0;
-            }else if("<=".equals(compareOperator)){
-                return leftValue.compareTo(rightValue) <= 0;
-            }else if("!=".equals(compareOperator)){
-                return leftValue.compareTo(rightValue) != 0;
-            }else if("contains".equals(compareOperator)){
-                return leftValue.indexOf(rightValue) > 0;
-            }else {
-                throw new RuntimeException("比较操作不合法");
-            }
-        }
-        else if("java.lang.Boolean".equals(sjlx)){
-            if ("==true".equals(compareOperator)) {
-                return "true".equals(leftValue);
-            }else if("==false".equals(compareOperator)){
-                return "false".equals(leftValue);
-            }else {
-                throw new RuntimeException("比较操作不合法");
-            }
-        }
-        else if(Arrays.asList("java.lang.Integer","java.math.BigDecimal","java.lang.Long"
-                ,"java.lang.Float","java.lang.Double"
-                ,"java.lang.Short","java.lang.Byte"
-                ,"java.math.BigInteger").contains(sjlx)){
-            int re = 0;
-            if("java.lang.Integer".equals(sjlx)){
-                re = new Integer(leftValue).compareTo(new Integer(rightValue));
-            }
-            else if("java.math.BigDecimal".equals(sjlx)){
-                re = new BigDecimal(leftValue).compareTo(new BigDecimal(rightValue));
-            }
-            else if("java.lang.Long".equals(sjlx)){
-                re = new Long(leftValue).compareTo(new Long(rightValue));
-            }
-            else if("java.lang.Float".equals(sjlx)){
-                re = new Float(leftValue).compareTo(new Float(rightValue));
-            }
-            else if("java.lang.Double".equals(sjlx)){
-                re = new Double(leftValue).compareTo(new Double(rightValue));
-            }
-            else if("java.lang.Short".equals(sjlx)){
-                re = new Short(leftValue).compareTo(new Short(rightValue));
-            }
-            else if("java.lang.Byte".equals(sjlx)){
-                re = new Byte(leftValue).compareTo(new Byte(rightValue));
-            }
-            else if("java.math.BigInteger".equals(sjlx)){
-                re = new BigInteger(leftValue).compareTo(new BigInteger(rightValue));
-            }
-            if ("==".equals(compareOperator)) {
-                return re == 0;
-            }else if(">".equals(compareOperator)){
-                return re > 0;
-            }else if("<".equals(compareOperator)){
-                return re < 0;
-            }else if(">=".equals(compareOperator)){
-                return re >= 0;
-            }else if("<=".equals(compareOperator)){
-                return re <= 0;
-            }else if("!=".equals(compareOperator)){
-                return re != 0;
-            }else {
-                throw new RuntimeException("数值类型的数据比较操作不合法");
-            }
-        }
-        else if("java.util.Date".equals(sjlx)){
-            throw new RuntimeException("日期比较未实现");
-        }
-        return  false;
-    }
 
     /**
      *

@@ -33,16 +33,55 @@ global com.alibaba.fastjson.JSONObject $obj
 //    then
 //end
 
-rule "大对象集合校验-双层或多层集合属性"
-    when
-//        eval(new com.function.CollectFunction().collectionHandle($obj, "boys.scoreReports.score", "java.lang.Integer","<","50") )
-//        eval(new com.function.CollectFunction().collectionHandle($obj, "boys.scoreReports.score", "java.util.List,java.util.List,java.lang.Integer",">,<","90,50","or","大对象集合校验-双层或多层集合属性") )
-//        eval(new com.function.CollectFunction().collectionHandle($obj, "boys.scoreReports.score", "java.util.List,java.util.List,java.lang.Integer",">","80","","大对象集合校验-双层或多层集合属性") )
-//        eval(new com.function.CollectFunction().collectionHandle($obj, "boys.age", "java.util.List,java.lang.String","<","18","","大对象集合校验-双层或多层集合属性") )
-        eval(new com.function.CollectFunction().collectionHandle($obj, "boys.scoreReports.score", "java.util.List,java.util.List,java.math.BigDecimal",">","80","","大对象向导规则测试02"))
-    then
+//rule "大对象集合校验-双层或多层集合属性"
+//    when
+////        eval(new com.function.CollectFunction().collectionHandle($obj, "boys.scoreReports.score", "java.lang.Integer","<","50") )
+////        eval(new com.function.CollectFunction().collectionHandle($obj, "boys.scoreReports.score", "java.util.List,java.util.List,java.lang.Integer",">,<","90,50","or","大对象集合校验-双层或多层集合属性") )
+////        eval(new com.function.CollectFunction().collectionHandle($obj, "boys.scoreReports.score", "java.util.List,java.util.List,java.lang.Integer",">","80","","大对象集合校验-双层或多层集合属性") )
+////        eval(new com.function.CollectFunction().collectionHandle($obj, "boys.age", "java.util.List,java.lang.String","<","18","","大对象集合校验-双层或多层集合属性") )
+//        eval(new com.function.CollectFunction().collectionFieldCompare($obj, "boys.scoreReports.score", "java.util.List,java.util.List,java.math.BigDecimal","==empty","","大对象向导规则测试02"))
+//    then
+//end
+
+
+//rule "大对象向导规则测试02"
+//when
+//eval((new com.function.CollectFunction().collectionFieldCompare($obj, "boys.scoreReports.score", "java.util.List,java.util.List,java.math.BigDecimal",">","80","大对象向导规则测试02") && new com.function.CollectFunction().collectionFieldCompare($obj, "boys.scoreReports.IsPublic", "java.util.List,java.util.List,java.lang.Boolean",">","1","大对象向导规则测试02")))
+//then
+//
+//end
+
+//rule "实体字段复合表达式测试"
+//when
+//eval(new com.function.CollectFunction().oneCollectionMultiFieldCompare($obj, "boys.scoreReports", "java.util.List,java.util.List", "subject!@@!java.lang.String!@@!==!@@!math-@@-IsPublic!@@!java.lang.Boolean!@@!==true!@@!-@@-&&score!@@!java.math.BigDecimal!@@!>!@@!60-@@-&&-@@-subject!@@!java.lang.String!@@!==!@@!English-@@-score!@@!java.math.BigDecimal!@@!>!@@!70-@@-&&-@@-||","实体字段复合表达式测试"))
+//then
+//
+//end
+
+//rule "模式中集合字段和枚举比较"
+//when
+//eval($obj.getString("borndate").equals("\"11\""))
+//then
+//end
+rule "实体字段复合表达式测试空比较"
+when
+eval(new com.function.CollectFunction().oneCollectionMultiFieldCompare($obj, "boys.scoreReports", "java.util.List,java.util.List", "subject!@@!java.lang.String!@@!==!@@!11-@@-subject!@@!java.lang.String!@@!==!@@!22-@@-subject!@@!java.lang.String!@@!==!@@!44-@@-&&&&subject!@@!java.lang.String!@@!==!@@!33-@@-&&","实体字段复合表达式测试空比较"))
+then
+
 end
 
+
+
+
+function java.lang.String getSubstr(java.lang.String arg0,java.lang.Integer arg1) {
+
+        if (arg0 == null) {
+            return "";
+        } else if (arg0.length() >= arg1) {
+            return arg0.substring(0, arg1);
+        }
+        return "";
+}
 
 
 
@@ -51,60 +90,6 @@ end
 //    gObj.put("ruleName", ruleName);
 //    return true;
 //}
-
-// combine.lista.age > 2 需要解读为遍历listb .age> 2
-//combine.lista.listb.age>2 需要解读为 遍历lista，再遍历listb .age> 2
-// 需要能够传入路径参数  先满足二层的情形, todo 多层待实现
-//需要能够传入比较符， 比如 字符串 <>''，数值类 ><=... todo 满足不同比较功能的通用类
-//需要能够解析 带路径的objkeys todo 需要drl 和调用drl两边配置实现。 考虑性能和简洁程度
-function java.lang.Boolean collectionHandle(com.alibaba.fastjson.JSONObject gObj,String namePath,String compareOperator,String rightOperand){
-  if (gObj== null) {
-    return false;
-  }
-  String ruleName = "规则名称1";
-
-  //获取f.boys
-  String[] pathArr = namePath.split("\\.");
-  if(pathArr.length < 2)return false;
-
-  com.alibaba.fastjson.JSONArray arr = gObj.getJSONObject(pathArr[0]).getJSONArray(pathArr[1]);
-  String fieldName = pathArr[2];
-
-  //objkeys获取f.boys的部分
-
-  //判断f.boys.age>2
-  boolean re = true;
-
-  com.alibaba.fastjson.JSONArray valueOfObjKeyArr = new com.alibaba.fastjson.JSONArray();
-  com.alibaba.fastjson.JSONArray valueOffield = new com.alibaba.fastjson.JSONArray();
-
-  for(Object obj : arr){
-    com.alibaba.fastjson.JSONObject boy = (com.alibaba.fastjson.JSONObject)obj;
-    // todo 需要编写通用的比较功能类，适配不同的情况，这里是大于
-    if(compareOperator == ">")
-    {
-        //如果校验不成功，保存信息的复合主键信息 到$obj
-        if(!(boy.getIntValue(fieldName) > java.lang.Integer.parseInt(rightOperand))){
-          re = false;
-          //@todo values of objkeys的组装
-          valueOffield.add(boy.getIntValue(fieldName));
-        }
-    }
-    else if(compareOperator =="<"){
-        //如果校验不成功，保存信息的复合主键信息 到$obj
-        if(!(boy.getIntValue(fieldName) < java.lang.Integer.parseInt(rightOperand))){
-          re = false;
-          //@todo values of objkeys的组装
-          valueOffield.add(boy.getIntValue(fieldName));
-        }
-    }
-  }
-    System.out.println("------------11--------");
-    System.out.println("-------------11-------");
-  // todo 行不同，需要在 then clause中才能更新global variable
-  gObj.put(ruleName+"@@"+namePath,valueOffield);
-  return re;
-}
 
 function java.lang.Boolean validtePropertyCertNumber(java.lang.String arg0) {
         java.lang.String regex = "^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领]（\\d{4}）[\\u4E00-\\u9FA5]{0,15}不动产权第\\d{7}号$";
