@@ -89,6 +89,7 @@
     {"boys.scoreReports": [
       "subject","average","score"
     ]},
+    {"boys":["name","age"]},
      "name",
      "age"
   ]

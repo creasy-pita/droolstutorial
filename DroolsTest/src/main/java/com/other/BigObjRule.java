@@ -3,6 +3,7 @@ package com.other;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.function.CollectFunction;
 import com.pojo.Person;
 import org.junit.Test;
 import org.kie.api.KieServices;
@@ -41,7 +42,7 @@ public class BigObjRule {
 //
 //    }
 
-    @Test
+//    @Test
     public void testBigObjRule() throws URISyntaxException, IOException {
 
 
@@ -63,6 +64,22 @@ public class BigObjRule {
         System.out.println("总执行了"+count+"条规则");
         System.out.println(obj);
         ks.dispose();
+    }
+
+    @Test
+    public void testComp() throws URISyntaxException, IOException {
+        System.out.println(this.getClass().getResource("/").getPath());
+        java.net.URL url = this.getClass().getResource("/bigobj.json");
+        java.nio.file.Path resPath = java.nio.file.Paths.get(url.toURI());
+        String jsonStr = new String(java.nio.file.Files.readAllBytes(resPath), "UTF8");
+        JSONObject obj = JSON.parseObject(jsonStr);
+        String keysStr = "boys.scoreReports";
+        String sjlxsStr = "java.util.List,java.util.List";
+        String postfixTraversal = "boys.scoreReports.subject!@@!java.lang.String!@@!==!@@!math-@@-boys.scoreReports.score!@@!java.lang.Integer!@@!>!@@!18-@@-&&";
+        String ruleName = "规则名称";
+
+        //gObj,String keysStr, String sjlxsStr,String postfixTraversal,String ruleName
+        new CollectFunction().CompareCollection(obj,keysStr,sjlxsStr,postfixTraversal,ruleName);
     }
 
 }

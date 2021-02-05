@@ -1,7 +1,9 @@
 package com.function;
 
+import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -52,6 +54,30 @@ public class ExpressionTree {
         root = st.peek();
         st.pop();
         return root;
+    }
+
+    /**
+     * 布尔表达式运算
+     * @param node 布尔表达式树
+     * @param data 表示树中需要的数据
+     * @return
+     */
+    public static boolean caculate(Node node, List<JSONObject> data) {
+        if ("united".equals(node.getType())) {
+            boolean left = caculate(node.left, data);
+            boolean right = caculate(node.right, data);
+            if ("&&".equals(node.getBoolOperator())) {
+                return left && right;
+            }else {
+                return left || right;
+            }
+        }
+        else {
+            RulePattern pattern = node.getPattern();
+            String[] keys = pattern.getLeftOperandKey().split("\\.");//这里时有层次的  f.a.b
+            String leftValue = data.get(keys.length - 1).get(keys[keys.length - 1]).toString();
+            return BooleanUtil.Compare(leftValue,pattern.rightOperand,pattern.leftOperandType,pattern.compareSymbol );
+        }
     }
 
     public static boolean caculate(Node node, Map<String, Object> data) {
