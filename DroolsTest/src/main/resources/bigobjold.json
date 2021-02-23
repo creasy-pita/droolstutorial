@@ -7,58 +7,84 @@
       "field2":"aa"
     }
   },
-  "name": "102",
-  "age": 4,
+  "name":"1",
+  "age": 20,
+  "sqrlx":1,
+  "sqryddh":null,
+  "borndate": "\"11\"",
   "boys": [
     {
-      "name": "Tom",
-      "age": 20,
-      "scoreReports": [
-        {
-          "average": 55,
-          "subject": "math",
-          "score": 61,
-          "IsPublic":true
-        },
-        {
-          "average": 80,
-          "subject": "English",
-          "score": 91,
-          "IsPublic":false
-        },
-        {
-          "average": 78,
-          "subject": "Gym",
-          "score": 40,
-          "IsPublic":true
-        }
-      ]
-    },
-    {
-      "name": "Creasy",
-      "age": 17,
+      "name":"Tom",
+       "age": 19,
       "scoreReports": [
         {
           "average": 55,
           "subject": "math",
           "score": 20,
-          "IsPublic":true
+          "IsPublic": true
+        },
+        {
+          "average": 80,
+          "subject": "English",
+          "score": 20,
+          "IsPublic": true
+        },
+        {
+          "average": 78,
+          "subject": "Gym",
+          "score": 20,
+          "IsPublic": true
+        }
+      ]
+
+    },
+    {
+      "name":"Creasy",
+      "age": 18,
+      "scoreReports": [
+        {
+          "average": 55,
+          "subject": "math",
+          "score": 61,
+          "IsPublic": true
         },
         {
           "average": 80,
           "subject": "English",
           "score": 100,
-          "IsPublic":true
+          "IsPublic": true
         },
         {
           "average": 78,
           "subject": "Gym",
           "score": 90,
-          "IsPublic":true
+          "IsPublic": true
         }
       ]
+
+    },
+    {
+      "name":"oliver",
+      "age": 8,
+      "scoreReports": [
+        {
+          "average": 10000,
+          "subject": "math",
+          "score": 50,
+          "IsPublic": true
+        }
+      ]
+
     }
   ],
+  "bigObjKeys":{
+    "boys.scoreReports": [
+      "subject","average","score"
+    ],
+    "boys": [
+      "name","age"
+    ]
+  },
   "objKeys":[
     {"boys.scoreReports": [
       "subject","average","score"

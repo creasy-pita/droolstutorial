@@ -7,13 +7,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+
+
 /**
+ * 布尔比较表达式树
  * Created by lujq on 2/2/2021.
  */
 public class ExpressionTree {
 
+    /**
+     * 通过布尔表达式的后缀遍历字符序列构建布尔比较表达式树
+     * @param postfix
+     * @return
+     */
     public static Node constructTree(String postfix) {
-        Stack<Node> st = new Stack<Node>();
+        Stack<Node> st = new Stack<>();
         Node root;
         int index = 0;
         while (index < postfix.length()) {
@@ -27,6 +35,7 @@ public class ExpressionTree {
                 node.left = left;
                 node.right = right;
                 st.push(node);
+                //&和| 需要出现两次
                 index += 2;
             } else {
                 int from = index;
@@ -36,16 +45,14 @@ public class ExpressionTree {
                         break;
                     }
                 }
-                // from ,index-1
                 String nodeStr = postfix.substring(from, index);
                 String[] patternList = nodeStr.split(DroolsUtil.PATTERN_SEPARATOR);
                 for (String pattern : patternList) {
-
                     if (StringUtils.isNotEmpty(pattern)) {
                         String[] split = pattern.split(DroolsUtil.SUB_SEPARATOR);
                         Node node = new Node();
                         node.setType("common");
-                        node.setPattern(new RulePattern(split[0], split[1], split[2], split.length > 3 ? split[3] : null));
+                        node.setPattern(new RulePattern(split[0].split("\\."), split[1], split[2], split.length > 3 ? split[3] : null));
                         st.push(node);
                     }
                 }
@@ -54,6 +61,30 @@ public class ExpressionTree {
         root = st.peek();
         st.pop();
         return root;
+    }
+
+    /**
+     * 布尔表达式运算
+     * @param node 布尔表达式树
+     * @param data 表示树中需要的数据
+     * @return
+     */
+    public static boolean caculate(Node node, Map<String, Object> data) {
+        if ("united".equals(node.getType())) {
+            boolean left = caculate(node.left, data);
+            boolean right = caculate(node.right, data);
+            if ("&&".equals(node.getBoolOperator())) {
+                return left && right;
+            }else {
+                return left || right;
+            }
+        }
+        else {
+            RulePattern pattern = node.getPattern();
+            String[] keys = pattern.getLeftOperandKey();
+            String leftValue = data.get(keys[keys.length - 1]).toString();
+            return BooleanUtil.Compare(leftValue,pattern.rightOperand,pattern.leftOperandType,pattern.compareSymbol );
+        }
     }
 
     /**
@@ -74,25 +105,10 @@ public class ExpressionTree {
         }
         else {
             RulePattern pattern = node.getPattern();
-            String[] keys = pattern.getLeftOperandKey().split("\\.");//这里时有层次的  f.a.b
+            String[] keys = pattern.getLeftOperandKey();
             String leftValue = data.get(keys.length - 1).get(keys[keys.length - 1]).toString();
+            System.out.println("compare");
             return BooleanUtil.Compare(leftValue,pattern.rightOperand,pattern.leftOperandType,pattern.compareSymbol );
-        }
-    }
-
-    public static boolean caculate(Node node, Map<String, Object> data) {
-        if ("united".equals(node.getType())) {
-            boolean left = caculate(node.left, data);
-            boolean right = caculate(node.right, data);
-            if ("&&".equals(node.getBoolOperator())) {
-                return left && right;
-            }else {
-                return left || right;
-            }
-        }
-        else {
-            RulePattern pattern = node.getPattern();
-            return BooleanUtil.Compare(data.get(pattern.leftOperandKey).toString(),pattern.rightOperand,pattern.leftOperandType,pattern.compareSymbol );
         }
     }
 }
@@ -152,24 +168,36 @@ class Node {
     }
 }
 
+/**
+ * 布尔表达式的模式
+ * <p>比如如下内容表示： subject 等于 "math"
+ * <p>leftOperandKey = "subject" 也可以带上层实体路径并用[.]连接 比如 student.subject
+ * <p>leftOperandType = "java.lang.String"
+ * <p>compareSymbol = "=="
+ * <p>rightOperand = "math"
+ * <p>加上分隔符后格式： subject!@@!java.lang.String!@@!==!@@!math-@@-
+ * */
 class RulePattern {
-    String leftOperandKey;
+    /**
+     * 带上层实体路径并用[.]连接 比如 student.subject
+     */
+    String[] leftOperandKey;
     String leftOperandType;
     String compareSymbol;
     String rightOperand;
 
-    public RulePattern(String leftOperandKey, String leftOperandType, String compareSymbol, String rightOperand) {
+    public RulePattern(String[] leftOperandKey, String leftOperandType, String compareSymbol, String rightOperand) {
         this.leftOperandKey = leftOperandKey;
         this.leftOperandType = leftOperandType;
         this.compareSymbol = compareSymbol;
         this.rightOperand = rightOperand;
     }
 
-    public String getLeftOperandKey() {
+    public String[] getLeftOperandKey() {
         return leftOperandKey;
     }
 
-    public void setLeftOperandKey(String leftOperandKey) {
+    public void setLeftOperandKey(String[] leftOperandKey) {
         this.leftOperandKey = leftOperandKey;
     }
 
@@ -189,5 +217,7 @@ class RulePattern {
         this.rightOperand = rightOperand;
     }
 }
+
+
 
 

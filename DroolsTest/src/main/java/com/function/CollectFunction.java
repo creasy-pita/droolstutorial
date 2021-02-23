@@ -207,9 +207,6 @@ public class CollectFunction {
         return result;
     }
 
-    /* @param keysStr  比如例子中的【f.a.b】
-     */
-
     /**
      *
      * @param gObj
@@ -218,8 +215,10 @@ public class CollectFunction {
      * @param postfixTraversal 表单式树的后缀遍历字符
      * @param ruleName
      */
-    public void CompareCollection(com.alibaba.fastjson.JSONObject gObj,String keysStr, String sjlxsStr,String postfixTraversal,String ruleName){
-        //f.a.b
+    public boolean CompareCollection(com.alibaba.fastjson.JSONObject gObj,String keysStr, String sjlxsStr,String postfixTraversal,String ruleName){
+//        if (!CheckRuleToExecute(gObj, ruleName)) {
+//            return false;
+//        }
         String objKeyPath = keysStr;
         ArrayList<JSONObject> jsonObjects = new ArrayList<>();
         jsonObjects.add(gObj);
@@ -235,14 +234,12 @@ public class CollectFunction {
                 gObj.put( DroolsUtil.VALUES_FOR_KEYS + "-" + ruleName, objKeyPathObj);
             objKeyPathObj.put(objKeyPath, valuesForKeys);
         }
-        System.out.println("---------------------------------------------------------");
-        System.out.println(valuesForKeys);
-        System.out.println("---------------------------------------------------------");
+        return result;
     }
 
     /**
      *
-     * @param relationObjInline 各层数据关联后组成一个实体集合列表， 比较判断前，各层数据关联到一起
+     * @param relationObjInline 各层数据关联后组成一个实体集合列表， 用于比较判断前，各层数据组织到一起
      * @param boolExpNode  比较判断的表达式是复合表达式树
      *                     <p>比如boys.scoreReports实体下score字段和boys实体下name字段的复合表达式：（ boys.scoreReports.score>18 || boys.name=="xxx"）
      * @param objNameListInPath  多层实体名称路径组成的列表  比如 本例中的boys.scoreReports
@@ -253,7 +250,7 @@ public class CollectFunction {
     <p>                          "name",
     <p>                          "age"
     <p>                          {"boys":["name","age"]},
-    <p>                          {"boys.scoreReports": ["subject","average","score"]},
+    <p>                          {"boys.scoreReports": ["subject","average","score"]}
     <p>                        ]
      * @return 数据对象关联后对每一条底层数据做比较判断：
      *         <p>传入数据对象（JSONObject类型是带层次数据），实体路径(跨多层)，各层实体关联到一起后进行比较判断，比较判断的表达式是复合表达式树
@@ -270,23 +267,28 @@ public class CollectFunction {
     比如 node中有 f.a.ax,String,==,"2"   则会转化成 relationObjInline.get(1).getString("ax").compareTo("2")== 的操作
     */
             re = ExpressionTree.caculate(boolExpNode, relationObjInline);
+            //校验不通过时记录主键信息
             if (!re) {
-                //valuesForKey输出格式{"name":"val","age":18,"boys.name":"val","boys.age":"val","boys.scoreReports.subject":"val","boys.scoreReports.subject":"val"}
+                //valuesForKey输出格式为{"name":"val","age":18,"boys.name":"val","boys.age":"val","boys.scoreReports.subject":"val","boys.scoreReports.subject":"val"}
                 JSONObject valuesForKey = new JSONObject();
                 valuesForKeys.add(valuesForKey);
                 for (Object objKeys : objKeysArr) {
+                    //第一层的valuesForKey  是String类型
                     if (objKeys instanceof String) {
-                        //第一层的valuesForKey
                         valuesForKey.put(objKeys.toString(), relationObjInline.get(0).get(objKeys.toString()));
-                    }else{
-                        //第n层的valuesForKey
+                    }
+                    //第n(n>1)层的valuesForKey是map类型
+                    else{
                         JSONObject jsonObject = (JSONObject) objKeys;
                         Map.Entry<String, Object> first = jsonObject.entrySet().iterator().next();
                         JSONArray objKeyNameList = (JSONArray) first.getValue();
-                        //根据objkey确定它的所在层n的数值
+                        //根据objkey确定它的所在层level的数值
                         int level = first.getKey().split("\\.").length;
-                        for (Object objKeyName : objKeyNameList) {
-                            valuesForKey.put(first.getKey() + "." + objKeyName, relationObjInline.get(level).get(objKeyName));
+                        //level需要在列表relationObjInline的大小范围内
+                        if (relationObjInline.size() > level) {
+                            for (Object objKeyName : objKeyNameList) {
+                                valuesForKey.put(first.getKey() + "." + objKeyName, relationObjInline.get(level).get(objKeyName));
+                            }
                         }
                     }
                 }
@@ -294,8 +296,8 @@ public class CollectFunction {
             }
             return re;
         }
+        //继续下一层处理
         else{
-            //继续下一级处理
             int level = relationObjInline.size() -1;
             JSONObject obj = relationObjInline.get(level);
             //当前实体路径长度下的实体名称
@@ -304,7 +306,8 @@ public class CollectFunction {
                 for(Object inObj : jarr){
                     //加入  todo 注意检查cast时是否会是JSONObject以外的类型
                     relationObjInline.add((JSONObject) inObj);
-                    re = re&&ObjCompareInRelationLine(relationObjInline,boolExpNode, objNameListInPath,objSjlxListInPath,valuesForKeys, objKeysArr);
+                    //re放后边  ObjCompareInRelationLine()&&re
+                    re = ObjCompareInRelationLine(relationObjInline,boolExpNode, objNameListInPath,objSjlxListInPath,valuesForKeys, objKeysArr) && re;
                     //再弹出
                     relationObjInline.remove(relationObjInline.size()-1);
                 }
@@ -321,6 +324,19 @@ public class CollectFunction {
 
     }
 
+    /**
+     * 确定规则是否需要执行
+     * @param gObj
+     * @param ruleName
+     * @return
+     */
+    public java.lang.Boolean CheckRuleToExecute(com.alibaba.fastjson.JSONObject gObj,String ruleName){
+        JSONArray ruleNameArr = gObj.getJSONArray(DroolsUtil.RULENAME_LIST_KEY);
+        if (ruleNameArr != null) {
+            return ruleNameArr.contains(ruleName);
+        }
+        return false;
+    }
 
     private Object getAttrObj(Object currentObj, String[] keyList,String[] sjlxList){
         for (int keyIndex = 0; keyIndex < keyList.length; keyIndex++) {

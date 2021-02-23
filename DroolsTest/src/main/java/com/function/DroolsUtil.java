@@ -12,6 +12,7 @@ public class DroolsUtil {
     public static final String VALUES_FOR_KEYS = "valuesForKeys";
     public static final String SUB_SEPARATOR = "!@@!";
     public static final String PATTERN_SEPARATOR = "-@@-";
+    public static final String RULENAME_LIST_KEY = "drlRuleNameList";
     /**
      * 用于集合属性比较的动作方法中数值类型值的比较
      */

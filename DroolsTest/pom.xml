@@ -76,6 +76,14 @@
             <artifactId>fastjson</artifactId>
             <version>1.2.47</version>
         </dependency>
+        <!--clone-->
+        <dependency>
+            <groupId>io.github.kostaskougios</groupId>
+            <artifactId>cloning</artifactId>
+<!--            <packaging>bundle</packaging>-->
+            <version>1.10.3</version>
+        </dependency>
+        <!--clone-->
     </dependencies>
     <build>
         <plugins>
