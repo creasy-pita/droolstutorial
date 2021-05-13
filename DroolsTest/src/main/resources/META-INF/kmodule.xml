@@ -153,5 +153,8 @@
     <kbase name="bigobj" packages="rules.bigobj">
         <ksession name="bigobj"/>
     </kbase>
+    <kbase name="runtime" packages="rules.runtime">
+        <ksession name="runtime"/>
+    </kbase>
 
 </kmodule>

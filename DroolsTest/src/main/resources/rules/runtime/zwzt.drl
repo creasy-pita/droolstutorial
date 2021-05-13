@@ -1,0 +1,9 @@
+package com.gisquest
+
+//政务中台
+rule "申请人姓名不为空"
+when
+    eval(true)
+then
+
+end

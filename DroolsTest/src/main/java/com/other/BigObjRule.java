@@ -67,15 +67,15 @@ public class BigObjRule {
         // 设置Filter
         AgendaFilter filter = new RuleNameMatchesAgendaFilter("实体字段复合表达式测试111");
         //模拟大数据量测试
-        if (obj.containsKey("boys")) {
-            JSONArray boys = obj.getJSONArray("boys");
-            JSONObject firstBoy = boys.getJSONObject(0);
-            for (int i = 0; i < 10000; i++) {
-                Cloner cloner = new Cloner();
-                JSONObject cloneBoy = cloner.deepClone(firstBoy);
-                boys.add(cloneBoy);
-            }
-        }
+//        if (obj.containsKey("boys")) {
+//            JSONArray boys = obj.getJSONArray("boys");
+//            JSONObject firstBoy = boys.getJSONObject(0);
+//            for (int i = 0; i < 10000; i++) {
+//                Cloner cloner = new Cloner();
+//                JSONObject cloneBoy = cloner.deepClone(firstBoy);
+//                boys.add(cloneBoy);
+//            }
+//        }
 
         ks.setGlobal("$obj",obj);
         long startTime = System.currentTimeMillis();
@@ -84,7 +84,7 @@ public class BigObjRule {
 //        int count = ks.fireAllRules(filter);
         System.out.println("time duration millseconds %d" + estimatedTime);
         System.out.println("总执行了"+count+"条规则");
-//        System.out.println(obj);
+        System.out.println(obj);
         ks.dispose();
     }
 

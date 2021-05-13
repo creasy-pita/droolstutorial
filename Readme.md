@@ -1,8 +1,8 @@
 # drools tutorial
 
+## 2021-05-13
 
-
-
+改造runtimemanager,提供多个drools runtime的版本
 
 ## 2020年8月22日
 

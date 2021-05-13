@@ -107,7 +107,6 @@ public class ExpressionTree {
             RulePattern pattern = node.getPattern();
             String[] keys = pattern.getLeftOperandKey();
             String leftValue = data.get(keys.length - 1).get(keys[keys.length - 1]).toString();
-            System.out.println("compare");
             return BooleanUtil.Compare(leftValue,pattern.rightOperand,pattern.leftOperandType,pattern.compareSymbol );
         }
     }
