@@ -1,4 +1,4 @@
-package com.gisquest
+package com.gisquest.rulesRuntime
 //指标平台
 rule "申请人姓名不为空"
 when

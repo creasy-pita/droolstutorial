@@ -1,5 +1,16 @@
-package rules.rulecheck
+package rules1.rulecheck1
 import com.pojo.School;
+dialect "mvel"
+	rule "test000"
+//    agenda-group "ag1"
+		when
+			eval("1" != empty);
+		then
+	        System.out.println("test000: hello world");
+
+	end
+
+
 	rule "test001"
 //    agenda-group "ag1"
 		when
@@ -17,19 +28,26 @@ import com.pojo.School;
         then
             System.out.println("test002: hello world");
     end
-//    rule "test003"
-////    agenda-group "ag2"
-//        when
-//            $s:School();
-//
-////              memberOf $s.classNameMap;
-//            eval(false)
-//            eval(function1(null));
-//        then
-//            $rn:drools.getRule().getName();
-//            System.out.println("test002: hello world");
-//    end
+    rule "test003"
+//    agenda-group "ag2"
+        when
+            $s:School();
 
+//              memberOf $s.classNameMap;
+            eval(false)
+            eval(function1(null));
+        then
+
+            System.out.println("test002: hello world");
+    end
+    rule "test004"
+//    agenda-group "ag2"
+        when
+//            eval(false)
+            eval(function1(null));
+        then
+            System.out.println("test002: hello world");
+    end
 function boolean function1(String aa){
     System.out.println("----------------------------------------------------------------");
 //    System.out.println("rulename" + drools.getRule().getName());

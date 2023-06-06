@@ -1,10 +1,13 @@
 package com.Runtime;
 
+import com.pojo.Person;
+import com.pojo.School;
 import org.junit.Test;
 import org.kie.api.definition.rule.Rule;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,6 +42,7 @@ public class RuntimeTest {
         //传递需要执行的规则名称列表
         //kieSession.insert(jsonObject);
 //        kieSession.setGlobal("$obj", jsonObject);
+
         kieSession.fireAllRules(filter);
         kieSession.dispose();
         List<String> firedRuleNameList = listener.getFiredRuleNameList();
@@ -112,4 +116,55 @@ public class RuntimeTest {
 
     }
 
+
+    @Test
+    public void DroolsReteAlgorithmTest() throws Exception {
+        GisRuleEngineRuntimeManager runtimeManager = new GisRuleEngineRuntimeManager();
+        runtimeManager.putRuntime("zwzt", new LocalFileRuleProvider("rules/runtime/zwzt.drl"));
+        String projectCode = "zwzt";
+        // 初始化drools
+        KieContainer kieContainer = runtimeManager.getRuntime(projectCode).getKieContainer();
+        KieSession kieSession = kieContainer.newKieSession();
+        // eventListener
+//        GisAgendaEventListener listener = new GisAgendaEventListener();
+//        kieSession.addEventListener(listener);
+        Person person=new Person();
+        person.setName("张小三");
+        kieSession.insert(person);
+        Person person2=new Person();
+        person2.setName("张小二");
+        kieSession.insert(person2);
+
+        School school=new School();
+        school.setClassName("一班");
+        kieSession.insert(school);
+
+        kieSession.fireAllRules();
+        kieSession.dispose();
+//        List<String> firedRuleNameList = listener.getFiredRuleNameList();
+//        System.out.println("---------------------------------------------------------");
+//        System.out.println("---------------------------------------------------------");
+//        System.out.println(firedRuleNameList);
+//        System.out.println("---------------------------------------------------------");
+//        System.out.println("---------------------------------------------------------");
+
+//        第二次会话调用
+//        kieSession = kieContainer.newKieSession();
+//        // eventListener
+//        kieSession.addEventListener(listener);
+//        person.setName("张小er");
+//        kieSession.insert(person);
+//        kieSession.insert(school);
+//
+//        kieSession.fireAllRules();
+//        kieSession.dispose();
+//        firedRuleNameList = listener.getFiredRuleNameList();
+//        System.out.println("---------------------------------------------------------");
+//        System.out.println("---------------------------------------------------------");
+//        System.out.println(firedRuleNameList);
+//        System.out.println("---------------------------------------------------------");
+//        System.out.println("---------------------------------------------------------");
+
+
+    }
 }

@@ -4,8 +4,12 @@ import com.pojo.Person;
 import com.pojo.School;
 import org.junit.Test;
 import org.kie.api.KieServices;
+import org.kie.api.builder.KieFileSystem;
 import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class RuleExtends {
     @Test
@@ -21,6 +25,10 @@ public class RuleExtends {
         ks.insert(school);
         int count = ks.fireAllRules();
         System.out.println("总执行了"+count+"条规则");
+
+        count = ks.fireAllRules();
+        System.out.println("总执行了"+count+"条规则");
         ks.dispose();
     }
+
 }

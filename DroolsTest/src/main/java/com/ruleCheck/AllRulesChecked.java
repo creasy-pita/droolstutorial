@@ -28,6 +28,11 @@ public class AllRulesChecked {
 //        int count = ks.fireAllRules();
         System.out.println("总执行了" + count + "条规则");
 
+        try {
+            Thread.sleep(3600000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         ks.dispose();
     }
 }

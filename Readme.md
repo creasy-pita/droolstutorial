@@ -4,6 +4,13 @@
 
 改造runtimemanager,提供多个drools runtime的版本
 
+
+### 演示应用配置
+
+**待做**  配置请假总天数5天内
+
+
+
 ## 2020年8月22日
 
 ### :grey_question: 问题全量评估过程如何避免

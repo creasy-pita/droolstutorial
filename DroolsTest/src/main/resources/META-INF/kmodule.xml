@@ -156,5 +156,7 @@
     <kbase name="runtime" packages="rules.runtime">
         <ksession name="runtime"/>
     </kbase>
-
+    <kbase name="leaveApply" packages="rules.leaveApply" >
+        <ksession name="leaveApply"/>
+    </kbase>
 </kmodule>

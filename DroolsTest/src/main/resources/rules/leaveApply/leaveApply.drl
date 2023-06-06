@@ -1,0 +1,13 @@
+package rules.leaveApply
+import com.alibaba.fastjson.JSONObject
+import com.alibaba.fastjson.JSONArray
+import java.util.Arrays
+dialect "mvel"
+global com.alibaba.fastjson.JSONObject $obj
+rule "请假申请事由不能为空"
+when
+eval((($obj.getString("reason")!=null)))
+then
+
+end
+

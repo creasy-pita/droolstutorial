@@ -1,9 +1,475 @@
-package com.gisquest
+import com.alibaba.fastjson.JSONObject 
+import com.gisquest.cloud.ruleexcutor.dao.oracle.SystemDao 
+import com.gisquest.cloud.utils.SpringUtil 
+import com.alibaba.fastjson.JSONArray 
+import java.util.Arrays 
+dialect "mvel"
+global com.alibaba.fastjson.JSONObject $obj
+//rule "证载面积不得超过500"
+//when
+//eval(com.gisquest.cloud.ruleexcutor.function.CollectionFunction.CheckRuleNeedExecute($obj,"证载面积不得超过500")&&((checkListKeyMin($obj.getJSONArray("ycqxxList"),"zzMj",500) ==true  )))
+//then
+//
+//end
+function java.lang.Boolean isEmptyString(java.lang.Object object) {
+        return org.springframework.util.StringUtils.isEmpty(object);
+}
+function java.lang.Integer getStringLength(java.lang.String str) {
+        if(str==null)return 0;
+return str.length();
+}
+function java.lang.Boolean canStrFormatToDate(java.lang.String arg0,java.lang.String arg1) {
+        if(arg0==null){return false;}
+        else{
+            java.text.SimpleDateFormat sdf =   new java.text.SimpleDateFormat(arg1);
+            try{
+                sdf.parse(arg0);
+                return true;
+            }catch (Exception e){
+                return false;
+            }
+        }
+}
+function java.lang.String getSubstr(java.lang.String arg0,java.lang.Integer arg1) {
+        if (arg0 == null) {
+            return "";
+        } else if (arg0.length() >= arg1) {
+            return arg0.substring(0, arg1);
+        }
+        return "";
+}
+function com.alibaba.fastjson.JSONArray selectData(java.lang.String sql,java.util.Map obj,java.lang.String argStringWithSplit) {
+        org.springframework.jdbc.core.JdbcTemplate jdbcTemplate = com.gisquest.cloud.ruleexcutor.conf.db.OracleDbHander.jdbcTemplateInstance();
+        java.util.List<Object> realArgList = new java.util.ArrayList<>();
+        java.util.List<String> argList = new java.util.ArrayList<>();
+        if(!org.springframework.util.StringUtils.isEmpty(argStringWithSplit)){
+            argList=java.util.Arrays.asList(argStringWithSplit.split(","));
+        }
+        argList.forEach(orgStr->{
+            realArgList.add(obj.get(orgStr));
+        });
+        Object[] objects = realArgList.toArray();
+        java.util.List<java.util.Map<java.lang.String, java.lang.Object>> datas;
+        if(com.gisquest.cloud.ruleexcutor.utils.CacheHelper.isCached(sql,objects)){
+            datas = com.gisquest.cloud.ruleexcutor.utils.CacheHelper.loadCachedData(sql,objects,java.util.List.class);
+        }else{
+            datas = jdbcTemplate.queryForList(sql, objects);
+            com.gisquest.cloud.ruleexcutor.utils.CacheHelper.cacheData(sql,objects,datas);
+        }
+        com.alibaba.fastjson.JSONArray jsonArray = new com.alibaba.fastjson.JSONArray();
+        datas.forEach(item->{
+            com.alibaba.fastjson.JSONObject object = new com.alibaba.fastjson.JSONObject(item);
+            jsonArray.add(object);
+        });
+        return jsonArray;
+}
+function java.lang.Boolean selectDataWithEmpty(java.lang.String sql,java.util.Map obj,java.lang.String argStringWithSplit) {
+        org.springframework.jdbc.core.JdbcTemplate jdbcTemplate = com.gisquest.cloud.ruleexcutor.conf.db.OracleDbHander.jdbcTemplateInstance();
+        java.util.List<Object> realArgList = new java.util.ArrayList<>();
+        java.util.List<String> argList = new java.util.ArrayList<>();
+        if (!org.springframework.util.StringUtils.isEmpty(argStringWithSplit)) {
+            argList = java.util.Arrays.asList(argStringWithSplit.split(","));
+        }
+        argList.forEach(orgStr -> {
+            realArgList.add(obj.get(orgStr));
+        });
+        Object[] objects = realArgList.toArray();
+        java.util.List<java.util.Map<java.lang.String, java.lang.Object>> datas;
+        if(com.gisquest.cloud.ruleexcutor.utils.CacheHelper.isCached(sql,objects)){
+            datas = com.gisquest.cloud.ruleexcutor.utils.CacheHelper.loadCachedData(sql,objects,java.util.List.class);
+        }else{
+            datas = jdbcTemplate.queryForList(sql, objects);
+            com.gisquest.cloud.ruleexcutor.utils.CacheHelper.cacheData(sql,objects,datas);
+        }
+        return datas.isEmpty();
+}
+function java.lang.Boolean inEnumValues(java.lang.Object objColumn,java.lang.String gmjsdm) {
+        if(objColumn==null){return false;}
+        String value = objColumn.toString();
+        com.gisquest.cloud.ruleexcutor.dao.mysql.EngineDao engineDao = com.gisquest.cloud.ruleexcutor.conf.db.MysqlDbHander.engineDaoInstance();
+        java.util.List<String> mjzList = engineDao.listMaxMjzByMjjsdm(gmjsdm);
+        return mjzList.contains(value);
+}
+function java.math.BigDecimal loadNumberFromDB(java.lang.String sql,java.util.Map obj,java.lang.String argStringWithSplit) {
+        org.springframework.jdbc.core.JdbcTemplate jdbcTemplate = com.gisquest.cloud.ruleexcutor.conf.db.OracleDbHander.jdbcTemplateInstance();
+        java.util.List<Object> realArgList = new java.util.ArrayList<>();
+        java.util.List<String> argList = new java.util.ArrayList<>();
+        if(!org.springframework.util.StringUtils.isEmpty(argStringWithSplit)){
+            argList=java.util.Arrays.asList(argStringWithSplit.split(","));
+        }
+        argList.forEach(orgStr->{
+            realArgList.add(obj.get(orgStr));
+        });
+        Object[] objects = realArgList.toArray();
+        java.util.List<java.util.Map<java.lang.String, java.lang.Object>> datas;
+        if(com.gisquest.cloud.ruleexcutor.utils.CacheHelper.isCached(sql,objects)){
+            datas = com.gisquest.cloud.ruleexcutor.utils.CacheHelper.loadCachedData(sql,objects,java.util.List.class);
+        }else{
+            datas = jdbcTemplate.queryForList(sql, objects);
+            com.gisquest.cloud.ruleexcutor.utils.CacheHelper.cacheData(sql,objects,datas);
+        }
+        if(datas.isEmpty()){
+            return null;
+        }
+        java.util.Map<String, Object> firstObj = datas.get(0);
+        Object value = firstObj.entrySet().iterator().next().getValue();
+        System.out.println("加载出一个值："+value.toString());
+        java.math.BigDecimal  number = new java.math.BigDecimal(value.toString());
+        return number;
+}
+function java.lang.Boolean validateIdCard(java.lang.String cardNumber) {
+        if(org.springframework.util.StringUtils.isEmpty(cardNumber)){
+            return false;
+        }
+        return com.gisquest.cloud.utils.IdcardUtils.validateCard(cardNumber);
+}
+function java.lang.Boolean checkFieldEnumForAll(com.alibaba.fastjson.JSONArray jsonArray,java.lang.String fieldName,java.lang.String mjjsdm) {
+        if(jsonArray==null){return false;}
+        com.gisquest.cloud.ruleexcutor.dao.mysql.EngineDao engineDao = com.gisquest.cloud.ruleexcutor.conf.db.MysqlDbHander.engineDaoInstance();
+        java.util.List<String> mjzList = engineDao.listMaxMjzByMjjsdm(mjjsdm);
+        for (int i = 0; i < jsonArray.size(); i++) {
+            com.alibaba.fastjson.JSONObject jsonObject = jsonArray.getJSONObject(i);
+            Object field=jsonObject.get(fieldName);
+            if(field==null){return false;}
+            if(!mjzList.contains(field.toString())){return false;}
+        }
+        return true;
+}
+function java.lang.Boolean checkFieldEnumForAllCanNull(com.alibaba.fastjson.JSONArray jsonArray,java.lang.String fieldName,java.lang.String mjjsdm) {
+        if(jsonArray==null){return false;}
+        com.gisquest.cloud.ruleexcutor.dao.mysql.EngineDao engineDao = com.gisquest.cloud.ruleexcutor.conf.db.MysqlDbHander.engineDaoInstance();
+        java.util.List<String> mjzList = engineDao.listMaxMjzByMjjsdm(mjjsdm);
+        for (int i = 0; i < jsonArray.size(); i++) {
+            com.alibaba.fastjson.JSONObject jsonObject = jsonArray.getJSONObject(i);
+            Object field=jsonObject.get(fieldName);
+            if(field==null){continue;}
+            if(!mjzList.contains(field.toString())){return false;}
+        }
+        return true;
+}
+function java.lang.Boolean stringStartAt(java.lang.String str,java.lang.String startStr) {
+        if (str.startsWith(startStr))return true;
+        return false;
+}
+function java.lang.Boolean stringEndAt(java.lang.String str,java.lang.String endStr) {
+        if (str.endsWith(endStr))return true;
+        return false;
+}
+function java.lang.Boolean validateStrFormat(java.lang.String str,java.lang.String format) {
+        if (str.matches(format))return true;
+        return false;
+}
+function java.lang.Boolean validatePostalCod(java.lang.Object postalCod) {
+        if(org.springframework.util.StringUtils.isEmpty(postalCod)){return false;}
+        java.lang.String regex = "^[1-9]\\d{5}$";
+        if (postalCod.toString().matches(regex))return true;
+        return false;
+}
+function java.lang.Boolean validateMobile(java.lang.String mobilePhone) {
+        java.lang.String regex = "^1[34578]\\d{9}$";
+        if (mobilePhone.matches(regex))return true;
+        return false;
+}
+function java.lang.Boolean validateTel(java.lang.String telPhone) {
+        java.lang.String regex = "^0\\d{2,3}-\\d{7,8}";
+        if (telPhone.matches(regex))return true;
+        return false;
+}
+function java.lang.Boolean isPositive(java.lang.Object object) {
+        if(object==null){
+            return false;
+        }
+        Long value ;
+        try {
+            value = Long.valueOf(object.toString());
+        }catch (Exception e){
+            return false;
+        }
+        if(value>0){return true;}
+        else{return false;}
+}
+function java.lang.Boolean selectDataAndColumnMustInsert(java.lang.String sql,java.util.Map obj,java.lang.String argStringWithSplit,java.lang.String checkColumns) {
+        if(org.springframework.util.StringUtils.isEmpty(checkColumns)){
+            return true;
+        }
+        java.util.List<String> keys = java.util.Arrays.asList(checkColumns.split(","));
+        org.springframework.jdbc.core.JdbcTemplate jdbcTemplate = com.gisquest.cloud.ruleexcutor.conf.db.OracleDbHander.jdbcTemplateInstance();
+        java.util.List<Object> realArgList = new java.util.ArrayList<>();
+        java.util.List<String> argList = new java.util.ArrayList<>();
+        if (!org.springframework.util.StringUtils.isEmpty(argStringWithSplit)) {
+            argList = java.util.Arrays.asList(argStringWithSplit.split(","));
+        }
+        argList.forEach(orgStr -> {
+            realArgList.add(obj.get(orgStr));
+        });
+        Object[] objects = realArgList.toArray();
+        java.util.List<java.util.Map<java.lang.String, java.lang.Object>> datas;
+        if(com.gisquest.cloud.ruleexcutor.utils.CacheHelper.isCached(sql,objects)){
+            datas = com.gisquest.cloud.ruleexcutor.utils.CacheHelper.loadCachedData(sql,objects,java.util.List.class);
+        }else{
+            datas = jdbcTemplate.queryForList(sql, objects);
+            com.gisquest.cloud.ruleexcutor.utils.CacheHelper.cacheData(sql,objects,datas);
+        }
+        for (int i = 0; i < datas.size(); i++) {
+            java.util.Map<String, Object> stringObjectMap = datas.get(i);
+            for (String key : keys) {
+                if(org.springframework.util.StringUtils.isEmpty(stringObjectMap.get(key))){
+                    return false;
+                }
+            }
+        }
+        return true;
+}
+function java.lang.Boolean checkPersonIdForList(String columnStr,java.util.List objList) {
+        if(objList==null || columnStr==null){
+            return false;
+        }
+        java.util.List<String> keys = java.util.Arrays.asList(columnStr.split(","));
+        for (Object aObj : objList) {
+            com.alibaba.fastjson.JSONObject object = com.alibaba.fastjson.JSON.parseObject(com.alibaba.fastjson.JSON.toJSONString(aObj));
+            for (String key : keys) {
+                // 为空或长度不等于18,即false
+                if(org.springframework.util.StringUtils.isEmpty(object.get(key)) || object.getString(key).length()!=18){
+                    return false;
+                }
+            }
+        }
+        return true;
+}
+function java.math.BigDecimal convertToBigDecimal(Object obj) {
+        java.math.BigDecimal result = null;
+        if (obj != null) {
+            if (obj instanceof String) {
+                result = new java.math.BigDecimal((String) obj);
+            } else if (obj instanceof Double) {
+                result = new java.math.BigDecimal((Double) obj);
+            } else if (obj instanceof Long) {
+                result = new java.math.BigDecimal((Long) obj);
+            } else if (obj instanceof Integer) {
+                result = new java.math.BigDecimal((Integer) obj);
+            } else if (obj instanceof Float) {
+                result = new java.math.BigDecimal((Float) obj);
+            } else if (obj instanceof java.math.BigDecimal) {
+                result = (java.math.BigDecimal) obj;
+            } else if (obj instanceof Number) {
+                result = new java.math.BigDecimal(((Number) obj).doubleValue());
+            }
+        }
+        return result;
+}
+function java.math.BigDecimal addNumber(Object n1,Object n2) {
+        if(n1==null || n2==null){return null;}
+        java.math.BigDecimal number1 = com.gisquest.cloud.ruleexcutor.utils.NumberConverter.convertToBigDecimal(n1);
+        java.math.BigDecimal number2 = com.gisquest.cloud.ruleexcutor.utils.NumberConverter.convertToBigDecimal(n2);
+        return number1.add(number2);
+}
+function java.lang.Boolean checkNumberInList(String columnStr,java.util.List objList) {
+        if (objList == null || columnStr == null) {
+            return false;
+        }
+        java.util.List<String> keys = java.util.Arrays.asList(columnStr.split(","));
+        for (Object aObj : objList) {
+            com.alibaba.fastjson.JSONObject object = com.alibaba.fastjson.JSON.parseObject(com.alibaba.fastjson.JSON.toJSONString(aObj));
+            Object obj = object.get(columnStr);
+            if (obj == null) {
+                return false;
+            }
+            java.math.BigDecimal number = com.gisquest.cloud.ruleexcutor.utils.NumberConverter.convertToBigDecimal(obj);
+            int i = number.compareTo(java.math.BigDecimal.ZERO);
+            if (i < 0) {
+                return false;
+            }
+        }
+        return true;
+}
+function java.lang.Boolean checkNullListByKey(String columnStr,java.util.List objList) {
+        if(objList==null || columnStr==null||objList.size()==0){
+        return false;
+      }
+      java.util.List<String> keys = java.util.Arrays.asList(columnStr.split(","));
+      for (Object aObj : objList) {
+        com.alibaba.fastjson.JSONObject object = com.alibaba.fastjson.JSON.parseObject(com.alibaba.fastjson.JSON.toJSONString(aObj));
+        for (String key : keys) {
+          // 为空即false
+          if(org.springframework.util.StringUtils.isEmpty(object.get(key))){
+            return false;
+          }
+        }
+      }
+      return true;
+}
+function java.lang.Boolean checkNullList(java.util.List objList) {
+        if (objList == null || objList.size()==0) {
+            return true;
+        }
+        return false;
+}
+function java.lang.Integer getYearByDate(java.util.Date obj) {
+        java.util.Calendar c = java.util.Calendar.getInstance();
+c.setTime(obj);
+return c.get(java.util.Calendar.YEAR);
+}
+function java.lang.Boolean validatePzwh(java.lang.String str) {
+        if (str.indexOf("〔") > -1 && str.indexOf("〕") > -1) {
+            java.lang.Integer tempYear = java.lang.Integer.valueOf(str.split("〔")[1].split("〕")[0]);
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy");
+            java.util.Date date = new java.util.Date();
+            java.lang.Integer yearThreshold = java.lang.Integer.valueOf(sdf.format(date)) + 1;
+            if (tempYear > yearThreshold) {
+                return false;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+}
+function java.lang.Boolean validateEmail(java.lang.String email) {
+        java.lang.String regex = "^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*$";
+        if (email.matches(regex)) {
+            return true;
+        } else {
+            return false;
+        }
+}
+function java.lang.Boolean verifyDate(java.util.Date date) {
+        java.text.SimpleDateFormat sp = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        java.lang.String tempString = sp.format(date);
+        java.lang.String tempToday = sp.format(new java.util.Date());
+        if (tempString.compareTo(tempToday) > 0) {
+            return false;
+        } else {
+            return true;
+        }
+}
+function java.lang.Boolean verifyDateAccordingToParams(java.util.Date date,java.lang.Long times,java.lang.String dateType) {
+        java.text.SimpleDateFormat sp = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        java.lang.String tempString = sp.format(date);
+        java.lang.String targetDay = "";
+        switch (dateType) {
+            case "year":
+                targetDay = sp.format(new java.util.Date(new java.util.Date().getTime() + times*1000*60*60*24*365));
+                break;
+            case "month":
+                targetDay = sp.format(new java.util.Date(new java.util.Date().getTime() + times*1000*60*60*24*30));
+                break;
+            default:
+                targetDay = sp.format(new java.util.Date(new java.util.Date().getTime() + times*1000*60*60*24));
+        }
+        if (tempString.compareTo(targetDay) > 0) {
+            return false;
+        } else {
+            return true;
+        }
+}
+function java.math.BigDecimal sumListByKey(java.util.List objList,java.lang.String columnStr) {
+        java.math.BigDecimal b = new java.math.BigDecimal(0);
+        if (objList == null || columnStr == null) {
+            return new java.math.BigDecimal(0);
+        }
+        for (Object aObj : objList) {
+            com.alibaba.fastjson.JSONObject object = com.alibaba.fastjson.JSON.parseObject(com.alibaba.fastjson.JSON.toJSONString(aObj));
+            Object obj = object.get(columnStr);
+            if (obj == null) {
+                b = b.add(new java.math.BigDecimal(0));
+                break;
+            }
+            java.math.BigDecimal number = com.gisquest.cloud.ruleexcutor.utils.NumberConverter.convertToBigDecimal(obj);
+            b = b.add(number);
+        }
+        return b;
+}
+function java.lang.Boolean verifyDate2(java.util.Date date,java.lang.Long times,java.lang.String dateType,java.util.Date appointDate) {
+        java.text.SimpleDateFormat sp = new java.text.SimpleDateFormat("yyyy-MM-dd");
+        java.lang.String tempString = sp.format(date);
+        java.lang.String targetDay = "";
+        if (appointDate == null) {
+            appointDate = new java.util.Date();
+        }
+        switch (dateType) {
+            case "year":
+                targetDay = sp.format(new java.util.Date(appointDate.getTime() + times*1000*60*60*24*365));
+                break;
+            case "month":
+                targetDay = sp.format(new java.util.Date(appointDate.getTime() + times*1000*60*60*24*30));
+                break;
+            default:
+                targetDay = sp.format(new java.util.Date(appointDate.getTime() + times*1000*60*60*24));
+        }
+        if (tempString.compareTo(targetDay) > 0) {
+            return true;
+        } else {
+            return false;
+        }
+}
+function java.lang.Boolean deepCheckNullList(String columnStr,java.util.List objList) {
+        if (objList == null || columnStr == null || objList.size() == 0) {
+            return false;
+        }
+        String[] keys = columnStr.split("\\.");
+        if (keys.length > 0) {
+            for (Object aObj : objList) {
+                com.alibaba.fastjson.JSONObject object = com.alibaba.fastjson.JSON.parseObject(com.alibaba.fastjson.JSON.toJSONString(aObj));
+                Object val = object.get(keys[0]);
+                if (val instanceof java.util.List) {
+                    java.util.List objval = ((java.util.List) val);
+                    if (!objval.isEmpty()) {
+                        if (!deepCheckNullList(columnStr.substring(columnStr.indexOf(".") + 1), objval)) {
+                            return false;
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                if (val instanceof java.lang.String) {
+                    // 为空即false
+                    if (org.springframework.util.StringUtils.isEmpty(object.get(keys[0]))) {
+                        return false;
+                    }
+                } else if (val == null) {
+                    return false;
+                }
+            }
+        }
+        return true;
+}
+function java.lang.Boolean checkListKeySum(java.util.List objList,java.lang.String columnStr,java.math.BigDecimal c) {
+        java.math.BigDecimal b = new java.math.BigDecimal(0);
+        if (objList == null || columnStr == null) {
+            return false;
+        }
+        for (Object aObj : objList) {
+            com.alibaba.fastjson.JSONObject object = com.alibaba.fastjson.JSON.parseObject(com.alibaba.fastjson.JSON.toJSONString(aObj));
+            Object obj = object.get(columnStr);
+            if (obj == null) {
+                b = b.add(new java.math.BigDecimal(0));
+                break;
+            }
+            java.math.BigDecimal number = new java.math.BigDecimal(java.lang.String.valueOf(obj));
+            b = b.add(number);
+        }
+        return b.subtract(c == null ? new java.math.BigDecimal("0") : c).compareTo(java.math.BigDecimal.ZERO) == 0;
+}
+function java.lang.Boolean checkListKeyMin(java.util.List objList,java.lang.String columnStr,java.math.BigDecimal min) {
+        java.math.BigDecimal b = new java.math.BigDecimal(0);
+        if (objList == null || columnStr == null) {
+            return true;
+        }
+        for (Object aObj : objList) {
+            com.alibaba.fastjson.JSONObject object = com.alibaba.fastjson.JSON.parseObject(com.alibaba.fastjson.JSON.toJSONString(aObj));
+            Object obj = object.get(columnStr);
+            if (obj == null) {
+                b = b.add(new java.math.BigDecimal(0));
+            } else {
+                b = new java.math.BigDecimal(java.lang.String.valueOf(obj));
+            }
+            if (b.compareTo(min) < 0) {
+                return true;
+            }
+            if (b.compareTo(min) >= 0) {
+                return false;
+            }
 
-//政务中台
-rule "申请人姓名不为空"
-when
-    eval(true)
-then
-
-end
+        }
+        return true;
+}
