@@ -9,9 +9,9 @@
         </console>
     </appenders>
     <loggers>
-        <root level="trace">
+        <root level="info">
             <appenderref ref="console"/>
         </root>
-        <logger name="org.springframework" level="trace"/>
+        <logger name="org.springframework" level="info"/>
     </loggers>
 </configuration>

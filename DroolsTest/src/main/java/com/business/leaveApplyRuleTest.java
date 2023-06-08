@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Created by lujq on 6/6/2023.
+ * Created by lujq on 6/3/2023.
  * 请假申请规则校验
  */
 public class leaveApplyRuleTest {
@@ -30,7 +30,7 @@ public class leaveApplyRuleTest {
         // 按包名获取包下的规则列表
         Collection<Rule> rules = ks.getKieBase().getKiePackage("rules.leaveApply").getRules();
         com.alibaba.fastjson.JSONObject obj = new JSONObject();
-        obj.put("reason", "lala");
+        obj.put("reason", "balala");
         ks.setGlobal("$obj", obj);
 
         List<String> ruleList = rules.stream().map(item -> item.getName()).collect(Collectors.toList());

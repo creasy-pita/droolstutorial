@@ -6,8 +6,12 @@ dialect "mvel"
 global com.alibaba.fastjson.JSONObject $obj
 rule "请假申请事由不能为空"
 when
-eval((($obj.getString("reason")!=null)))
+  eval((($obj.getString("reason")!=null)))
 then
-
+  sendEmail($obj.getString("email"));
 end
+
+function void sendEmail(String email){
+    System.out.println("发送邮件");
+}
 

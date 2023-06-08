@@ -1,4 +1,4 @@
-package rules1.rulecheck1
+package rules.rulecheck
 import com.pojo.School;
 dialect "mvel"
 	rule "test000"
